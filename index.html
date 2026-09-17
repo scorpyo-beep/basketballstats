@@ -1,4 +1,21 @@
-<!DOCTYPE html>
+{
+  "name": "Basketball Stats",
+  "short_name": "Basketball Stats",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#eef4f8",
+  "theme_color": "#07558a",
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -69,4 +86,5 @@ function render(){document.getElementById('opponent').value=live.opponent||'';do
 ['opponent','date','notes'].forEach(id=>document.getElementById(id).addEventListener(id==='date'?'change':'input',save));
 render();
 </script>
-</body></html>
+</body>
+</html>
