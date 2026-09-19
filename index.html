@@ -69,5 +69,13 @@ function render(){document.getElementById('opponent').value=live.opponent||'';do
 ['opponent','date','notes'].forEach(id=>document.getElementById(id).addEventListener(id==='date'?'change':'input',save));
 render();
 </script>
+  <script>
+if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js')
+      .catch(err => console.log('Service worker:', err));
+  });
+}
+  </script>
 </body>
 </html>
