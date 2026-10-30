@@ -184,25 +184,30 @@ function drawCardFront(ctx,p,primary,dark,accent){
  ctx.save();ctx.beginPath();ctx.rect(0,0,W,H);ctx.clip();
  // Tall portrait photo fills almost the entire card, with player information layered over the bottom.
  if(cardPhotoImage){drawCover(ctx,cardPhotoImage,0,0,W,H)}else{ctx.fillStyle='#ffffff18';ctx.fillRect(0,0,W,H);ctx.fillStyle='#fff';ctx.textAlign='center';ctx.font='190px system-ui';ctx.fillText('🏀',450,510);ctx.font='bold 28px system-ui';ctx.fillText('ADD PLAYER PHOTO',450,585)}
- // Clean full-bleed photo with a collectible-card graphic behind the player information.
- // This is a decorative angular frame, not a dark fade: the photograph remains visible underneath.
+ // Compact two-colour lower-third banner inspired by modern collectible basketball cards.
+ // It occupies only the bottom strip so the player's photo remains the main focus.
+ const bannerTop=930, bannerBottom=1118, split=625;
  ctx.save();
- ctx.globalAlpha=.88;ctx.fillStyle=dark;ctx.beginPath();ctx.moveTo(34,786);ctx.lineTo(866,786);ctx.lineTo(866,1080);ctx.lineTo(790,1148);ctx.lineTo(34,1148);ctx.closePath();ctx.fill();
- ctx.globalAlpha=.95;ctx.fillStyle=primary;ctx.beginPath();ctx.moveTo(34,786);ctx.lineTo(360,786);ctx.lineTo(292,815);ctx.lineTo(34,815);ctx.closePath();ctx.fill();
- ctx.globalAlpha=.9;ctx.fillStyle=accent;ctx.beginPath();ctx.moveTo(34,786);ctx.lineTo(52,786);ctx.lineTo(52,1148);ctx.lineTo(34,1148);ctx.closePath();ctx.fill();
- ctx.beginPath();ctx.moveTo(70,852);ctx.lineTo(830,852);ctx.lineTo(830,858);ctx.lineTo(70,858);ctx.closePath();ctx.globalAlpha=.8;ctx.fill();
- ctx.globalAlpha=.95;ctx.beginPath();ctx.moveTo(690,1080);ctx.lineTo(866,904);ctx.lineTo(866,944);ctx.lineTo(730,1080);ctx.closePath();ctx.fill();
- ctx.globalAlpha=.55;ctx.strokeStyle=accent;ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(70,1070);ctx.lineTo(830,1070);ctx.stroke();
+ ctx.globalAlpha=.97;
+ ctx.fillStyle=primary;ctx.beginPath();ctx.moveTo(42,bannerTop+8);ctx.lineTo(split+26,bannerTop+8);ctx.lineTo(split,bannerBottom);ctx.lineTo(42,bannerBottom);ctx.closePath();ctx.fill();
+ ctx.fillStyle=accent;ctx.beginPath();ctx.moveTo(split+26,bannerTop+8);ctx.lineTo(858,bannerTop-8);ctx.lineTo(858,bannerBottom+8);ctx.lineTo(split,bannerBottom);ctx.closePath();ctx.fill();
+ // Fine theme-colour edge gives the banner a finished trading-card look.
+ ctx.globalAlpha=1;ctx.strokeStyle=dark;ctx.lineWidth=5;ctx.beginPath();ctx.moveTo(42,bannerTop+8);ctx.lineTo(split+26,bannerTop+8);ctx.lineTo(858,bannerTop-8);ctx.stroke();
  ctx.restore();
- ctx.shadowColor='#000';ctx.shadowBlur=8;ctx.shadowOffsetX=2;ctx.shadowOffsetY=2;ctx.fillStyle=accent;ctx.font='900 26px system-ui';ctx.textAlign='left';ctx.fillText('BASKETBALL',70,84);ctx.fillStyle='#fff';ctx.font='900 56px system-ui';ctx.textAlign='right';ctx.fillText('#'+String(p?.num||'00').slice(0,5),830,112);ctx.shadowBlur=0;ctx.shadowOffsetX=0;ctx.shadowOffsetY=0;
- // Player details sit on top of the graphic while the photo still fills every card edge.
- ctx.fillStyle=accent;ctx.textAlign='left';ctx.font='900 23px system-ui';ctx.fillText((document.getElementById('cardSeason').value||'SEASON').toUpperCase().slice(0,32),72,824);
- const name=(p?.name||'PLAYER NAME').toUpperCase();ctx.fillStyle='#fff';let nfont=61;ctx.font='1000 '+nfont+'px system-ui';while(ctx.measureText(name).width>745&&nfont>31){nfont-=2;ctx.font='1000 '+nfont+'px system-ui'}ctx.fillText(name,70,895);
- ctx.fillStyle=accent;ctx.fillRect(70,922,760,4);
- ctx.textAlign='left';ctx.fillStyle=accent;ctx.font='900 21px system-ui';ctx.fillText('TEAM',72,970);ctx.fillStyle='#fff';ctx.font='850 28px system-ui';ctx.fillText(String(p?.team||'TEAM NAME').toUpperCase().slice(0,25),72,1007);
- ctx.textAlign='right';ctx.fillStyle=accent;ctx.font='900 21px system-ui';ctx.fillText('POSITION',828,970);ctx.fillStyle='#fff';ctx.font='850 27px system-ui';ctx.fillText((document.getElementById('cardPosition').value||document.getElementById('cardSubtitle').value||'PLAYER').toUpperCase().slice(0,20),828,1007);
- ctx.textAlign='left';ctx.fillStyle='#ffffffdd';ctx.font='800 19px system-ui';const subtitle=(document.getElementById('cardSubtitle').value||'').trim();if(subtitle)ctx.fillText(subtitle.toUpperCase().slice(0,55),72,1052);
- ctx.textAlign='center';ctx.fillStyle=accent;ctx.font='900 22px system-ui';ctx.fillText('PLAYER TRADING CARD',450,1110);ctx.fillStyle='#ffffffb8';ctx.font='800 17px system-ui';ctx.fillText('TAP TO TURN OVER',450,1140);
+ // Season label is kept small above the name, leaving room for the photo.
+ ctx.save();ctx.shadowColor='#0008';ctx.shadowBlur=4;ctx.textAlign='left';
+ ctx.fillStyle='#ffffff';ctx.font='800 19px system-ui';
+ ctx.fillText((document.getElementById('cardSeason').value||'SEASON').toUpperCase().slice(0,32),72,976);
+ const fullName=(p?.name||'PLAYER NAME').trim().toUpperCase();
+ const parts=fullName.split(/\s+/);let first=parts.length>1?parts.slice(0,-1).join(' '):'';let last=parts.length>1?parts.slice(-1)[0]:parts[0];
+ ctx.fillStyle='#fff';ctx.font='900 34px system-ui';ctx.fillText(first||last,72,1022);
+ if(first){let fs=55;ctx.font='1000 '+fs+'px system-ui';while(ctx.measureText(last).width>500&&fs>30){fs-=2;ctx.font='1000 '+fs+'px system-ui'}ctx.fillText(last,72,1082)}
+ // Team and position live in the angled colour block on the right.
+ ctx.textAlign='center';ctx.fillStyle='#fff';ctx.font='800 19px system-ui';
+ const team=String(p?.team||'TEAM').toUpperCase().slice(0,22);ctx.fillText(team,742,1000);
+ ctx.font='900 29px system-ui';ctx.fillText((document.getElementById('cardPosition').value||document.getElementById('cardSubtitle').value||'PLAYER').toUpperCase().slice(0,16),742,1045);
+ ctx.font='800 17px system-ui';ctx.fillText(' #'+String(p?.num||'00').slice(0,5),742,1082);
+ ctx.restore();
  ctx.restore();
  // Stickers are drawn over the finished photo and can be repositioned directly by dragging them.
  drawCardStickers(ctx);
