@@ -107,6 +107,7 @@ input,select,textarea{width:100%;min-width:0;border:1px solid #d1d9e0;border-rad
  <div class="playLayout"><div>
   <div class="courtWrap"><canvas id="playCanvas" class="courtCanvas" width="900" height="560" aria-label="Basketball court drawing pad"></canvas></div>
   <div class="playBtns"><button class="blue" onclick="setPlayTool('draw')">✏️ Draw</button><button class="blue" onclick="setPlayTool('arrow')">➡ Arrow</button><button class="orange" onclick="setPlayTool('erase')">⌫ Erase</button><button onclick="undoPlayStroke()">↶ Undo</button><button onclick="clearPlayCourt()" class="red">Clear Court</button><button class="green" onclick="saveCustomPlay()">💾 Save Play</button></div>
+  <div class="playBtns" style="margin-top:6px"><label style="font-size:11px">Player marker <select id="playMarkerNumber"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option></select></label><button class="blue" onclick="setPlayTool('offense')">🔵 Add Offense</button><button class="orange" onclick="setPlayTool('defense')">🔴 Add Defense</button><button class="green" onclick="animatePlay()">▶ Animate</button><button onclick="stopPlayAnimation()">■ Stop</button><button onclick="savePlayVariation()">＋ Save Variation</button><button onclick="printPlay()">🖨 Print</button><button onclick="sharePlay()">↗ Share</button></div>
   <div class="playTools" style="margin-top:8px"><div><label>Play name</label><input id="customPlayName" placeholder="e.g. Baseline quick hitter"></div><div><label>Line colour</label><select id="playColor"><option value="#dc2626">Red</option><option value="#07558a">Blue</option><option value="#16a34a">Green</option><option value="#7c3aed">Purple</option><option value="#111827">Black</option></select></div><div class="wide"><label>Coach notes (optional)</label><input id="customPlayNotes" placeholder="Timing, player roles, reads..."></div></div>
  </div><div>
   <h3>Preset Playbook</h3><div class="playTools"><div><label>Category</label><select id="playCategory" onchange="renderPresetSelect()"><option>Offensive</option><option>Defensive</option><option>Inbounds</option><option>Press Break</option><option>Late Game</option></select></div><div><label>Preset play</label><select id="playPreset" onchange="loadPresetPlay()"></select></div></div>
@@ -266,7 +267,7 @@ function syncInputs(){live.opponent=document.getElementById('opponent').value;li
 
 // Coaches Play Pad — stored separately so player/game data is never changed.
 const PLAYS_KEY='basketball_plays_samsung_v1';
-let playTool='draw',playStrokes=[],playPointer=null,playSaved=[];
+let playTool='draw',playStrokes=[],playPointer=null,playSaved=[],playAnimFrame=null,playAnimStart=0;
 const PRESET_PLAYS={
 'Offensive':[
  ['5-Out Motion','Space five players around the arc; pass, cut hard, and fill the open spot.','motion'],
@@ -307,10 +308,24 @@ function courtBase(){const c=document.getElementById('playCanvas');if(!c)return;
  // baskets and keys at both ends
  for(const side of [0,1]){const bx=side? w-78:78,dir=side?-1:1;x.beginPath();x.arc(bx, h/2, 13,0,Math.PI*2);x.stroke();x.beginPath();x.moveTo(side?w-18:18,h/2-70);x.lineTo(side?w-18:18,h/2+70);x.stroke();x.strokeRect(side?w-190:18,h/2-115,172,230);x.beginPath();x.arc(side?w-190:190,h/2,115,side?Math.PI/2:-Math.PI/2,side?Math.PI*1.5:Math.PI/2);x.stroke();x.beginPath();x.arc(bx,h/2,58,0,Math.PI*2);x.stroke();}
  x.fillStyle='#64748b';x.font='bold 17px system-ui';x.textAlign='center';x.fillText('OFFENSE →',w/2,h-30);}
-function drawPlay(){const c=document.getElementById('playCanvas');if(!c)return;courtBase();const x=c.getContext('2d');playStrokes.forEach(st=>{if(!st.points||st.points.length<1)return;x.strokeStyle=st.color||'#dc2626';x.fillStyle=st.color||'#dc2626';x.lineWidth=st.tool==='erase'?18:6;x.lineCap='round';x.lineJoin='round';x.beginPath();x.moveTo(st.points[0].x*c.width,st.points[0].y*c.height);st.points.slice(1).forEach(pt=>x.lineTo(pt.x*c.width,pt.y*c.height));x.stroke();if(st.tool==='arrow'&&st.points.length>1){const a=st.points[st.points.length-2],b=st.points[st.points.length-1],ax=a.x*c.width,ay=a.y*c.height,bx=b.x*c.width,by=b.y*c.height,ang=Math.atan2(by-ay,bx-ax),len=25;x.beginPath();x.moveTo(bx,by);x.lineTo(bx-len*Math.cos(ang-.5),by-len*Math.sin(ang-.5));x.lineTo(bx-len*Math.cos(ang+.5),by-len*Math.sin(ang+.5));x.closePath();x.fill()}})}
-function setPlayTool(t){playTool=t;toast(t==='draw'?'Draw mode':t==='arrow'?'Arrow mode':'Erase mode')}
+function drawPlay(){
+ const c=document.getElementById('playCanvas');if(!c)return;courtBase();const x=c.getContext('2d');
+ playStrokes.forEach(st=>{
+  if(!st.points||!st.points.length)return;
+  if(/^offense[1-5]$/.test(st.tool)||/^defense[1-5]$/.test(st.tool)){
+   const pt=st.points[0],px=pt.x*c.width,py=pt.y*c.height,n=st.tool.slice(-1),def=st.tool.startsWith('defense');
+   x.beginPath();x.arc(px,py,23,0,Math.PI*2);x.fillStyle=def?'#dc2626':'#07558a';x.fill();x.lineWidth=3;x.strokeStyle='#fff';x.stroke();
+   x.fillStyle='#fff';x.font='bold 23px system-ui';x.textAlign='center';x.textBaseline='middle';x.fillText(n,px,py);return;
+  }
+  x.strokeStyle=st.color||'#dc2626';x.fillStyle=st.color||'#dc2626';x.lineWidth=st.tool==='erase'?18:6;x.lineCap='round';x.lineJoin='round';x.beginPath();x.moveTo(st.points[0].x*c.width,st.points[0].y*c.height);st.points.slice(1).forEach(pt=>x.lineTo(pt.x*c.width,pt.y*c.height));x.stroke();
+  if((st.tool==='arrow'||st.tool==='pass'||st.tool==='screen')&&st.points.length>1){const a=st.points[st.points.length-2],b=st.points[st.points.length-1],ax=a.x*c.width,ay=a.y*c.height,bx=b.x*c.width,by=b.y*c.height,ang=Math.atan2(by-ay,bx-ax),len=25;x.beginPath();x.moveTo(bx,by);x.lineTo(bx-len*Math.cos(ang-.5),by-len*Math.sin(ang-.5));x.lineTo(bx-len*Math.cos(ang+.5),by-len*Math.sin(ang+.5));x.closePath();x.fill()}
+  if(st.tool==='screen'&&st.points.length){const pt=st.points[st.points.length-1];x.save();x.translate(pt.x*c.width,pt.y*c.height);x.rotate(Math.PI/4);x.fillRect(-20,-5,40,10);x.restore()}
+ });
+}
+
+function setPlayTool(t){playTool=t;toast(({draw:'Draw routes',arrow:'Draw directional arrows',erase:'Erase',offense:'Tap court to place offensive player',defense:'Tap court to place defender'})[t]||'Tool selected')}
 function playPos(e){const r=e.currentTarget.getBoundingClientRect();return{x:Math.max(0,Math.min(1,(e.clientX-r.left)/r.width)),y:Math.max(0,Math.min(1,(e.clientY-r.top)/r.height))}}
-function setupPlayCanvas(){const c=document.getElementById('playCanvas');if(!c||c.dataset.ready)return;c.dataset.ready='1';c.addEventListener('pointerdown',e=>{e.preventDefault();c.setPointerCapture(e.pointerId);playPointer=e.pointerId;playStrokes.push({tool:playTool,color:playTool==='erase'?'#e8f0e5':document.getElementById('playColor').value,points:[playPos(e)]});drawPlay()});c.addEventListener('pointermove',e=>{if(playPointer!==e.pointerId)return;const st=playStrokes[playStrokes.length-1];st.points.push(playPos(e));drawPlay()});const end=e=>{if(playPointer===e.pointerId)playPointer=null};c.addEventListener('pointerup',end);c.addEventListener('pointercancel',end);drawPlay()}
+function setupPlayCanvas(){const c=document.getElementById('playCanvas');if(!c||c.dataset.ready)return;c.dataset.ready='1';c.addEventListener('pointerdown',e=>{e.preventDefault();c.setPointerCapture(e.pointerId);const pos=playPos(e);if(playTool==='offense'||playTool==='defense'){const n=document.getElementById('playMarkerNumber').value;playStrokes.push({tool:playTool+n,color:playTool==='offense'?'#07558a':'#dc2626',points:[pos]});drawPlay();return}playPointer=e.pointerId;playStrokes.push({tool:playTool,color:playTool==='erase'?'#e8f0e5':document.getElementById('playColor').value,points:[pos]});drawPlay()});c.addEventListener('pointermove',e=>{if(playPointer!==e.pointerId)return;const st=playStrokes[playStrokes.length-1];st.points.push(playPos(e));drawPlay()});const end=e=>{if(playPointer===e.pointerId)playPointer=null};c.addEventListener('pointerup',end);c.addEventListener('pointercancel',end);drawPlay()}
 function undoPlayStroke(){playStrokes.pop();drawPlay()}
 function clearPlayCourt(){if(!confirm('Clear the court drawing?'))return;playStrokes=[];drawPlay()}
 function saveCustomPlay(){const name=document.getElementById('customPlayName').value.trim();if(!name)return toast('Enter a play name');if(!playStrokes.length)return toast('Draw or load a play first');playSaved.unshift({id:Date.now().toString(),name,category:'Custom',notes:document.getElementById('customPlayNotes').value,strokes:JSON.parse(JSON.stringify(playStrokes))});try{localStorage.setItem(PLAYS_KEY,JSON.stringify(playSaved));renderSavedPlays();toast('Play saved')}catch(e){playSaved.shift();toast('Could not save. Device storage may be full.')}}
@@ -347,6 +362,36 @@ function presetStrokes(code){const P=(arr,color='#dc2626',tool='draw')=>({tool,c
  protect:[P([[.25,.28],[.4,.4],[.5,.55],[.72,.6]]) ,P([[.75,.28],[.65,.4],[.5,.55]])]};
  const base=sets[code]||[];return base.map(st=>({...st,points:st.points.map(pt=>({...pt}))}));}
 function loadPresetPlay(){const cat=document.getElementById('playCategory').value,idx=Number(document.getElementById('playPreset').value)||0,p=PRESET_PLAYS[cat][idx];if(!p)return;playStrokes=presetStrokes(p[2]);document.getElementById('customPlayName').value=p[0];document.getElementById('customPlayNotes').value=p[1];document.getElementById('presetDescription').textContent=p[1];drawPlay()}
+function savePlayVariation(){
+ const baseName=document.getElementById('customPlayName').value.trim()||'Basketball Play';
+ const name=prompt('Name this variation:',baseName+' - Variation');if(!name)return;
+ if(!playStrokes.length)return toast('Load or draw a play first');
+ const parent=playSaved.find(p=>p.name===baseName);
+ playSaved.unshift({id:Date.now().toString(),name,category:'Variation',parentId:parent?parent.id:null,notes:document.getElementById('customPlayNotes').value,strokes:JSON.parse(JSON.stringify(playStrokes))});
+ try{localStorage.setItem(PLAYS_KEY,JSON.stringify(playSaved));renderSavedPlays();toast('Variation saved')}catch(e){playSaved.shift();toast('Could not save variation')}
+}
+function stopPlayAnimation(){if(playAnimFrame)cancelAnimationFrame(playAnimFrame);playAnimFrame=null;drawPlay()}
+function animatePlay(){
+ stopPlayAnimation();const c=document.getElementById('playCanvas');if(!c)return;
+ const routes=playStrokes.filter(st=>!/^offense|^defense/.test(st.tool)&&st.points&&st.points.length>1&&st.tool!=='erase');
+ if(!routes.length)return toast('Add a route with at least two points first');
+ playAnimStart=performance.now();
+ const frame=now=>{drawPlay();const elapsed=((now-playAnimStart)%2600)/2600;const x=c.getContext('2d');
+  routes.forEach((st,i)=>{const pts=st.points,lengths=[];let total=0;for(let j=1;j<pts.length;j++){const dx=(pts[j].x-pts[j-1].x)*c.width,dy=(pts[j].y-pts[j-1].y)*c.height,l=Math.hypot(dx,dy);lengths.push(l);total+=l}
+   let target=((elapsed+i*.17)%1)*total,seg=0;while(seg<lengths.length-1&&target>lengths[seg]){target-=lengths[seg];seg++}
+   const a=pts[seg],b=pts[seg+1],t=lengths[seg]?target/lengths[seg]:0,px=(a.x+(b.x-a.x)*t)*c.width,py=(a.y+(b.y-a.y)*t)*c.height;
+   x.beginPath();x.arc(px,py,12,0,Math.PI*2);x.fillStyle='#facc15';x.fill();x.lineWidth=3;x.strokeStyle='#111827';x.stroke();
+  });playAnimFrame=requestAnimationFrame(frame)};playAnimFrame=requestAnimationFrame(frame);toast('Play animation running')
+}
+function printPlay(){stopPlayAnimation();const c=document.getElementById('playCanvas');if(!c)return;const url=c.toDataURL('image/png'),name=(document.getElementById('customPlayName').value||'Basketball Play').replace(/[<>]/g,''),notes=(document.getElementById('customPlayNotes').value||'').replace(/[<>]/g,'');const w=window.open('','_blank');if(!w)return toast('Allow pop-ups to print the play');w.document.write('<!doctype html><html><head><title>'+name+'</title><style>body{font-family:Arial;padding:20px;text-align:center}img{width:100%;max-width:1000px}h1{margin:0 0 8px}p{white-space:pre-wrap}</style></head><body><h1>'+name+'</h1><img src="'+url+'"><p>'+notes+'</p><script>window.onload=()=>window.print()<\/script></body></html>');w.document.close()}
+async function sharePlay(){
+ stopPlayAnimation();const c=document.getElementById('playCanvas');if(!c)return;const url=c.toDataURL('image/png'),name=document.getElementById('customPlayName').value||'Basketball Play';
+ try{const blob=await (await fetch(url)).blob(),file=new File([blob],name.replace(/[^a-z0-9_-]/gi,'-')+'.png',{type:'image/png'});
+  if(navigator.canShare&&navigator.canShare({files:[file]}))await navigator.share({title:name,text:document.getElementById('customPlayNotes').value||'Basketball play diagram',files:[file]});
+  else if(navigator.share)await navigator.share({title:name,text:document.getElementById('customPlayNotes').value||'Basketball play diagram'});
+  else{const a=document.createElement('a');a.href=url;a.download='basketball-play.png';a.click();toast('Play diagram downloaded')}
+ }catch(e){if(e.name!=='AbortError')toast('Sharing unavailable; use Print to save a copy')}
+}
 function initPlays(){try{const v=JSON.parse(localStorage.getItem(PLAYS_KEY)||'[]');playSaved=Array.isArray(v)?v:[]}catch(_){playSaved=[]}setupPlayCanvas();renderPresetSelect();renderSavedPlays()}
 
 function render(){document.getElementById('opponent').value=live.opponent||'';document.getElementById('date').value=live.date||today();document.getElementById('notes').value=live.notes||'';document.getElementById('q').textContent='Q'+live.q;document.getElementById('score').textContent=Number(live.score)||0;renderPlayersBar();displaySelected();updateGameClock();renderTable();renderPlayersPage();season();games()}
