@@ -105,7 +105,8 @@ input,select,textarea{width:100%;min-width:0;border:1px solid #d1d9e0;border-rad
 <section id="plays" class="hidden">
  <div class="card"><h2>📋 Coaches Court Pad</h2><p class="playHint">Draw your own plays directly on the court. Use a finger or mouse. Choose Draw for player routes, Arrow for direction arrows, or Erase to correct a line.</p>
  <div class="playLayout"><div>
-  <div class="courtWrap"><canvas id="playCanvas" class="courtCanvas" width="900" height="560" aria-label="Basketball court drawing pad"></canvas></div>
+  <div class="courtWrap"><canvas id="playCanvas" class="courtCanvas" width="900" height="560" aria-label="Basketball court drawing pad"></canvas>
+<div style="display:flex;gap:12px;flex-wrap:wrap;font-size:12px;margin:6px 0 10px;color:#475569"><span>🔵 Offense 1–5</span><span>🔴 Defense 1–5</span><span>🟠 Ball</span><span>🟢 Pass path</span><span>🟡 Player route</span></div></div>
   <div class="playBtns"><button class="blue" onclick="setPlayTool('draw')">✏️ Draw</button><button class="blue" onclick="setPlayTool('arrow')">➡ Arrow</button><button class="orange" onclick="setPlayTool('erase')">⌫ Erase</button><button onclick="undoPlayStroke()">↶ Undo</button><button onclick="clearPlayCourt()" class="red">Clear Court</button><button class="green" onclick="saveCustomPlay()">💾 Save Play</button></div>
   <div class="playBtns" style="margin-top:6px"><label style="font-size:11px">Player marker <select id="playMarkerNumber"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option></select></label><button class="blue" onclick="setPlayTool('move')">✋ Move Players</button><button class="blue" onclick="setPlayTool('offense')">🔵 Add Offense</button><button class="orange" onclick="setPlayTool('defense')">🔴 Add Defense</button><button class="green" onclick="animatePlay()">▶ Animate</button><button onclick="stopPlayAnimation()">■ Stop</button><button onclick="savePlayVariation()">＋ Save Variation</button><button onclick="printPlay()">🖨 Print</button><button onclick="sharePlay()">↗ Share</button></div>
   <div class="playTools" style="margin-top:8px"><div><label>Play name</label><input id="customPlayName" placeholder="e.g. Baseline quick hitter"></div><div><label>Line colour</label><select id="playColor"><option value="#dc2626">Red</option><option value="#07558a">Blue</option><option value="#16a34a">Green</option><option value="#7c3aed">Purple</option><option value="#111827">Black</option></select></div><div class="wide"><label>Coach notes (optional)</label><input id="customPlayNotes" placeholder="Timing, player roles, reads..."></div></div>
@@ -308,21 +309,27 @@ function courtBase(){const c=document.getElementById('playCanvas');if(!c)return;
  // baskets and keys at both ends
  for(const side of [0,1]){const bx=side? w-78:78,dir=side?-1:1;x.beginPath();x.arc(bx, h/2, 13,0,Math.PI*2);x.stroke();x.beginPath();x.moveTo(side?w-18:18,h/2-70);x.lineTo(side?w-18:18,h/2+70);x.stroke();x.strokeRect(side?w-190:18,h/2-115,172,230);x.beginPath();x.arc(side?w-190:190,h/2,115,side?Math.PI/2:-Math.PI/2,side?Math.PI*1.5:Math.PI/2);x.stroke();x.beginPath();x.arc(bx,h/2,58,0,Math.PI*2);x.stroke();}
  x.fillStyle='#64748b';x.font='bold 17px system-ui';x.textAlign='center';x.fillText('OFFENSE →',w/2,h-30);}
-function drawPlay(){
+function drawPlay(options={}){
  const c=document.getElementById('playCanvas');if(!c)return;courtBase();const x=c.getContext('2d');
+ const hideMarkers=!!options.hideMarkers;
  playStrokes.forEach(st=>{
   if(!st.points||!st.points.length)return;
   if(/^offense[1-5]$/.test(st.tool)||/^defense[1-5]$/.test(st.tool)){
+   if(hideMarkers)return;
    const pt=st.points[0],px=pt.x*c.width,py=pt.y*c.height,n=st.tool.slice(-1),def=st.tool.startsWith('defense');
    x.beginPath();x.arc(px,py,23,0,Math.PI*2);x.fillStyle=def?'#dc2626':'#07558a';x.fill();x.lineWidth=3;x.strokeStyle='#fff';x.stroke();
    x.fillStyle='#fff';x.font='bold 23px system-ui';x.textAlign='center';x.textBaseline='middle';x.fillText(n,px,py);return;
   }
+  if(st.tool==='ball'){
+   if(options.hideBall)return;
+   const pt=st.points[0],px=pt.x*c.width,py=pt.y*c.height;
+   x.beginPath();x.arc(px,py,12,0,Math.PI*2);x.fillStyle='#f97316';x.fill();x.lineWidth=2;x.strokeStyle='#7c2d12';x.stroke();
+   x.beginPath();x.moveTo(px-8,py);x.lineTo(px+8,py);x.moveTo(px,py-8);x.lineTo(px,py+8);x.stroke();return;
+  }
   x.strokeStyle=st.color||'#dc2626';x.fillStyle=st.color||'#dc2626';x.lineWidth=st.tool==='erase'?18:6;x.lineCap='round';x.lineJoin='round';x.beginPath();x.moveTo(st.points[0].x*c.width,st.points[0].y*c.height);st.points.slice(1).forEach(pt=>x.lineTo(pt.x*c.width,pt.y*c.height));x.stroke();
   if((st.tool==='arrow'||st.tool==='pass'||st.tool==='screen')&&st.points.length>1){const a=st.points[st.points.length-2],b=st.points[st.points.length-1],ax=a.x*c.width,ay=a.y*c.height,bx=b.x*c.width,by=b.y*c.height,ang=Math.atan2(by-ay,bx-ax),len=25;x.beginPath();x.moveTo(bx,by);x.lineTo(bx-len*Math.cos(ang-.5),by-len*Math.sin(ang-.5));x.lineTo(bx-len*Math.cos(ang+.5),by-len*Math.sin(ang+.5));x.closePath();x.fill()}
-  if(st.tool==='screen'&&st.points.length){const pt=st.points[st.points.length-1];x.save();x.translate(pt.x*c.width,pt.y*c.height);x.rotate(Math.PI/4);x.fillRect(-20,-5,40,10);x.restore()}
  });
 }
-
 function setPlayTool(t){playTool=t;toast(({draw:'Draw routes or drag players',arrow:'Draw arrows or drag players',move:'Drag numbered players to reposition them',erase:'Erase',offense:'Tap court to place offensive player',defense:'Tap court to place defender'})[t]||'Tool selected')}
 function playPos(e){const r=e.currentTarget.getBoundingClientRect();return{x:Math.max(0,Math.min(1,(e.clientX-r.left)/r.width)),y:Math.max(0,Math.min(1,(e.clientY-r.top)/r.height))}}
 function setupPlayCanvas(){
@@ -342,63 +349,84 @@ function deleteSavedPlay(id){if(!confirm('Delete this saved play?'))return;playS
 function renderSavedPlays(){const el=document.getElementById('savedPlays'),empty=document.getElementById('noSavedPlays');if(!el)return;el.innerHTML=playSaved.map(p=>`<div class="playItem"><b>${esc(p.name)}</b><small>${esc(p.category||'Custom')}${p.notes?' · '+esc(p.notes):''}</small><button onclick="loadSavedPlay('${esc(p.id)}')">Load Play</button><button style="margin-top:4px;background:#dc2626" onclick="deleteSavedPlay('${esc(p.id)}')">Delete</button></div>`).join('');empty.style.display=playSaved.length?'none':'block'}
 function renderPresetSelect(){const cat=document.getElementById('playCategory').value,sel=document.getElementById('playPreset');sel.innerHTML=PRESET_PLAYS[cat].map((p,i)=>`<option value="${i}">${esc(p[0])}</option>`).join('');loadPresetPlay()}
 function presetStrokes(code){
- const P=(arr,color='#dc2626',player=0)=>({tool:'arrow',color,player,points:arr.map(([x,y])=>({x,y}))});
- const player=(n,x,y,team='offense')=>({tool:team+n,color:team==='offense'?'#07558a':'#dc2626',points:[{x,y}]});
+ const marker=(n,x,y,team='offense')=>({tool:team+n,color:team==='offense'?'#07558a':'#dc2626',points:[{x,y}]});
+ const route=(n,pts,team='offense')=>({tool:'arrow',player:n,team,color:team==='offense'?'#f59e0b':'#dc2626',points:pts.map(([x,y])=>({x,y}))});
+ // Full-court canvas: this team attacks the right-hand basket. Players begin in the left half,
+ // spread across the court; the right half is the attacking half, not the centre circle.
+ const formations={
+  motion:[[.25,.28],[.34,.18],[.43,.28],[.34,.52],[.25,.70]],
+  horns:[[.27,.50],[.39,.29],[.39,.71],[.27,.29],[.27,.71]],
+  pnr:[[.29,.50],[.43,.50],[.35,.25],[.35,.75],[.22,.50]],
+  givego:[[.28,.50],[.43,.38],[.43,.62],[.24,.25],[.24,.75]],
+  ucla:[[.28,.50],[.42,.38],[.42,.62],[.25,.25],[.25,.75]],
+  floppy:[[.25,.50],[.35,.25],[.35,.75],[.43,.30],[.43,.70]],
+  box:[[.27,.32],[.27,.68],[.42,.32],[.42,.68],[.22,.50]],
+  flex:[[.25,.30],[.25,.70],[.42,.30],[.42,.70],[.22,.50]],
+  baselinebox:[[.27,.30],[.27,.70],[.42,.30],[.42,.70],[.22,.50]],
+  stack:[[.22,.32],[.22,.42],[.22,.52],[.22,.62],[.22,.72]],
+  sidelinebox:[[.22,.28],[.35,.28],[.22,.72],[.35,.72],[.18,.50]],
+  zipper:[[.22,.50],[.35,.32],[.35,.68],[.44,.32],[.44,.68]],
+  press14:[[.20,.25],[.32,.42],[.32,.58],[.20,.75],[.43,.50]],
+  press212:[[.20,.25],[.32,.40],[.32,.60],[.20,.75],[.43,.50]],
+  diamond:[[.22,.50],[.34,.35],[.34,.65],[.44,.35],[.44,.65]],
+  twoforone:[[.25,.50],[.38,.30],[.38,.70],[.45,.25],[.45,.75]],
+  ato:[[.25,.50],[.38,.30],[.38,.70],[.45,.25],[.45,.75]],
+  need3:[[.25,.50],[.38,.30],[.38,.70],[.45,.25],[.45,.75]],
+  protect:[[.25,.50],[.38,.30],[.38,.70],[.45,.25],[.45,.75]],
+  man:[[.25,.25],[.35,.35],[.45,.50],[.35,.65],[.25,.75]],
+  zone23:[[.25,.30],[.25,.70],[.42,.30],[.42,.70],[.35,.50]],
+  zone32:[[.22,.25],[.35,.25],[.45,.50],[.35,.75],[.22,.75]],
+  zone131:[[.22,.50],[.35,.30],[.35,.70],[.45,.40],[.45,.60]],
+  fullman:[[.20,.20],[.30,.35],[.40,.50],[.30,.65],[.20,.80]],
+  boxone:[[.25,.25],[.25,.75],[.42,.25],[.42,.75],[.35,.50]]
+ };
  const routes={
- motion:[[[.22,.28],[.35,.48],[.50,.28]],[[.78,.28],[.65,.48],[.50,.28]],[[.50,.78],[.50,.56],[.68,.22]]],
- horns:[[[.50,.78],[.50,.58],[.50,.36],[.68,.22]],[[.35,.42],[.50,.58],[.62,.73]],[[.65,.42],[.50,.58],[.50,.28]]],
- pnr:[[[.35,.72],[.48,.54],[.63,.40],[.78,.25]],[[.50,.50],[.50,.35],[.65,.20]]],
- givego:[[[.28,.50],[.48,.43]],[[.48,.43],[.42,.65],[.50,.80]]],
- ucla:[[[.25,.30],[.45,.35]],[[.45,.35],[.30,.65],[.50,.82]]],
- floppy:[[[.22,.78],[.35,.58],[.55,.55],[.73,.35]],[[.22,.78],[.40,.75],[.70,.68]]],
- box:[[[.30,.35],[.48,.50],[.70,.28]],[[.70,.35],[.55,.50],[.50,.80]]],
- flex:[[[.25,.28],[.42,.45],[.50,.75]],[[.72,.28],[.58,.45],[.50,.75]]],
- man:[[[.22,.25],[.27,.30]],[[.38,.35],[.40,.40]],[[.55,.30],[.56,.35]],[[.72,.25],[.70,.30]],[[.50,.72],[.50,.68]]],
- zone23:[[[.30,.28],[.35,.30]],[[.70,.28],[.65,.30]],[[.25,.52],[.30,.55]],[[.50,.60],[.50,.62]],[[.75,.52],[.70,.55]]],
- zone32:[[[.25,.28],[.30,.30]],[[.50,.25],[.50,.30]],[[.75,.28],[.70,.30]],[[.38,.62],[.40,.65]],[[.62,.62],[.60,.65]]],
- zone131:[[[.50,.20],[.50,.28]],[[.25,.42],[.30,.45]],[[.50,.42],[.50,.48]],[[.75,.42],[.70,.45]],[[.50,.75],[.50,.70]]],
- fullman:[[[.20,.18],[.23,.25]],[[.40,.28],[.42,.35]],[[.60,.28],[.58,.35]],[[.80,.18],[.77,.25]],[[.50,.72],[.50,.65]]],
- boxone:[[[.30,.30],[.32,.35]],[[.70,.30],[.68,.35]],[[.30,.62],[.32,.58]],[[.70,.62],[.68,.58]],[[.50,.20],[.50,.25]]],
- baselinebox:[[[.32,.32],[.50,.50],[.50,.78]],[[.68,.32],[.58,.50],[.78,.70]],[[.50,.25],[.50,.42],[.30,.68]]],
- stack:[[[.50,.28],[.50,.45],[.72,.72]],[[.50,.35],[.30,.55],[.25,.78]],[[.50,.45],[.50,.72]]],
- sidelinebox:[[[.25,.28],[.45,.45],[.70,.65]],[[.40,.28],[.55,.45],[.75,.30]]],
- zipper:[[[.35,.75],[.35,.55],[.50,.35],[.70,.20]]],
- press14:[[[.20,.30],[.40,.45],[.55,.50],[.80,.35]],[[.50,.50],[.70,.70]]],
- press212:[[[.25,.30],[.45,.45],[.50,.50],[.78,.28]],[[.75,.30],[.62,.55],[.80,.78]]],
- diamond:[[[.50,.25],[.50,.45],[.72,.60],[.85,.78]],[[.50,.45],[.30,.60],[.15,.78]]],
- twoforone:[[[.25,.70],[.40,.52],[.62,.38],[.80,.20]]],
- ato:[[[.20,.50],[.42,.50],[.55,.30],[.75,.25]],[[.42,.50],[.50,.72]]],
- need3:[[[.20,.30],[.40,.45],[.65,.35],[.82,.20]],[[.50,.65],[.65,.50],[.82,.20]]],
- protect:[[[.25,.28],[.40,.40],[.50,.55],[.72,.60]],[[.75,.28],[.65,.40],[.50,.55]]]
+  motion:[[.25,.28],[.48,.28],[.62,.18],[.82,.28]],
+  horns:[[.27,.50],[.43,.50],[.58,.34],[.82,.22]],
+  pnr:[[.29,.50],[.48,.50],[.62,.42],[.84,.32]],
+  givego:[[.28,.50],[.48,.38],[.62,.50],[.84,.68]],
+  ucla:[[.28,.50],[.44,.38],[.62,.26],[.84,.22]],
+  floppy:[[.25,.50],[.42,.50],[.62,.34],[.84,.22]],
+  box:[[.27,.32],[.46,.40],[.64,.55],[.84,.68]],
+  flex:[[.25,.30],[.46,.38],[.64,.50],[.84,.68]],
+  baselinebox:[[.27,.30],[.48,.42],[.66,.55],[.84,.72]],
+  stack:[[.22,.32],[.42,.42],[.62,.50],[.84,.50]],
+  sidelinebox:[[.22,.28],[.42,.38],[.62,.50],[.84,.65]],
+  zipper:[[.22,.50],[.42,.50],[.62,.35],[.84,.22]],
+  press14:[[.20,.25],[.42,.40],[.62,.50],[.84,.35]],
+  press212:[[.20,.25],[.42,.42],[.62,.50],[.84,.30]],
+  diamond:[[.22,.50],[.42,.50],[.62,.62],[.84,.78]],
+  twoforone:[[.25,.50],[.48,.42],[.68,.30],[.86,.22]],
+  ato:[[.25,.50],[.48,.50],[.68,.34],[.86,.25]],
+  need3:[[.25,.50],[.48,.42],[.68,.30],[.86,.18]],
+  protect:[[.25,.50],[.48,.50],[.68,.62],[.84,.70]]
  };
- const defensive=['man','zone23','zone32','zone131','fullman','boxone'].includes(code);
- const starts={
- motion:[[.22,.28],[.38,.20],[.50,.28],[.65,.20],[.78,.28]],
- horns:[[.35,.42],[.65,.42],[.22,.62],[.78,.62],[.50,.78]],
- pnr:[[.35,.72],[.50,.50],[.22,.30],[.78,.30],[.65,.72]],
- givego:[[.28,.50],[.48,.43],[.72,.30],[.30,.75],[.70,.75]],
- ucla:[[.25,.30],[.45,.35],[.75,.30],[.28,.72],[.72,.72]],
- floppy:[[.22,.78],[.35,.58],[.55,.55],[.73,.35],[.50,.78]],
- box:[[.30,.35],[.70,.35],[.30,.65],[.70,.65],[.50,.78]],
- flex:[[.25,.28],[.72,.28],[.25,.65],[.72,.65],[.50,.78]],
- baselinebox:[[.32,.32],[.68,.32],[.32,.62],[.68,.62],[.50,.25]],
- stack:[[.50,.28],[.50,.40],[.50,.52],[.50,.64],[.50,.76]],
- sidelinebox:[[.25,.28],[.40,.28],[.25,.68],[.40,.68],[.18,.50]],
- zipper:[[.35,.75],[.35,.55],[.50,.35],[.70,.20],[.75,.75]],
- press14:[[.20,.30],[.40,.45],[.55,.50],[.80,.35],[.50,.75]],
- press212:[[.25,.30],[.45,.45],[.50,.50],[.78,.28],[.50,.78]],
- diamond:[[.50,.25],[.50,.45],[.30,.60],[.70,.60],[.50,.78]],
- twoforone:[[.25,.70],[.40,.52],[.62,.38],[.80,.20],[.50,.78]],
- ato:[[.20,.50],[.42,.50],[.55,.30],[.75,.25],[.50,.78]],
- need3:[[.20,.30],[.40,.45],[.65,.35],[.82,.20],[.50,.65]],
- protect:[[.25,.28],[.40,.40],[.50,.55],[.72,.60],[.50,.78]]
- };
- const out=[],pos=starts[code]||starts.motion;
- if(defensive){
-  pos.forEach((pt,i)=>out.push(player(i+1,pt[0],pt[1],'defense')));
-  starts.motion.forEach((pt,i)=>out.push(player(i+1,pt[0],pt[1],'offense')));
- }else pos.forEach((pt,i)=>out.push(player(i+1,pt[0],pt[1],'offense')));
- (routes[code]||routes.motion).forEach((pts,i)=>out.push(P(pts,defensive?'#dc2626':'#f59e0b',i+1)));
+ const defense=['man','zone23','zone32','zone131','fullman','boxone'].includes(code);
+ const form=formations[code]||formations.motion;
+ const out=[];
+ // Offensive players numbered 1–5. Defensive schemes also place defenders in the attacking half.
+ form.forEach((pt,i)=>out.push(marker(i+1,pt[0],pt[1],'offense')));
+ if(defense){
+  const defForm=code==='zone23'?[[.63,.30],[.63,.70],[.78,.28],[.78,.72],[.78,.50]]:
+   code==='zone32'?[[.65,.25],[.78,.25],[.86,.50],[.78,.75],[.65,.75]]:
+   code==='zone131'?[[.85,.50],[.70,.30],[.70,.70],[.58,.40],[.58,.60]]:
+   code==='boxone'?[[.65,.28],[.65,.72],[.82,.28],[.82,.72],[.74,.50]]:
+   [[.60,.22],[.68,.36],[.74,.50],[.68,.64],[.60,.78]];
+  defForm.forEach((pt,i)=>out.push(marker(i+1,pt[0],pt[1],'defense')));
+ }
+ // Player-specific routes: each route is attached to its numbered player, not an unrelated moving dot.
+ const path=routes[code]||routes.motion;
+ const routePlayers=code==='pnr'?[1,2]:code==='givego'?[1,2]:code==='ucla'?[1,2]:code==='floppy'?[2,4]:code==='box'?[1,2]:code==='flex'?[1,2]:code==='baselinebox'?[1,2,5]:code==='stack'?[1,2,3]:code==='sidelinebox'?[1,2]:code==='zipper'?[1,4]:code==='horns'?[1,2,3]:[1,2,3];
+ routePlayers.forEach((n,i)=>{
+  const start=form[n-1],pts=path.map(q=>[q[0],q[1]]);
+  pts[0]=[start[0],start[1]];
+  out.push(route(n,pts,'offense'));
+ });
+ // Ball starts with point guard (#1), shown as a basketball beside the player.
+ out.push({tool:'ball',player:1,points:[{x:form[0][0]+.035,y:form[0][1]}]});
+ // A pass route moves the ball from the point guard to the first receiver, then toward the attack.
+ const receiver=form[1]||form[0];
+ out.push({tool:'pass',player:1,color:'#16a34a',points:[{x:form[0][0]+.035,y:form[0][1]},{x:receiver[0]+.035,y:receiver[1]},{x:.72,y:.50}]});
  return out;
 }
 function loadPresetPlay(){const cat=document.getElementById('playCategory').value,idx=Number(document.getElementById('playPreset').value)||0,p=PRESET_PLAYS[cat][idx];if(!p)return;playStrokes=presetStrokes(p[2]);document.getElementById('customPlayName').value=p[0];document.getElementById('customPlayNotes').value=p[1];document.getElementById('presetDescription').textContent=p[1];drawPlay()}
@@ -413,13 +441,31 @@ function savePlayVariation(){
 function stopPlayAnimation(){if(playAnimFrame)cancelAnimationFrame(playAnimFrame);playAnimFrame=null;drawPlay()}
 function animatePlay(){
  stopPlayAnimation();const c=document.getElementById('playCanvas');if(!c)return;
- const routes=playStrokes.filter(st=>st.player&&st.points?.length>1&&st.tool!=='erase');
- if(!routes.length)return toast('No player routes available to animate');
+ const routes=playStrokes.filter(st=>st.player&&st.points?.length>1&&(st.tool==='arrow'||st.tool==='pass'));
+ const playerRoutes=routes.filter(st=>st.tool==='arrow');
+ const ballRoute=routes.find(st=>st.tool==='pass');
+ if(!playerRoutes.length&&!ballRoute)return toast('This preset has no movement or pass routes');
  playAnimStart=performance.now();
- const frame=now=>{drawPlay();const ctx=c.getContext('2d'),elapsed=((now-playAnimStart)%4000)/4000;
- routes.forEach((st,i)=>{const pts=st.points,lengths=[];let total=0;for(let j=1;j<pts.length;j++){const dx=(pts[j].x-pts[j-1].x)*c.width,dy=(pts[j].y-pts[j-1].y)*c.height,l=Math.hypot(dx,dy);lengths.push(l);total+=l}if(!total)return;let d=((elapsed+i*.18)%1)*total,seg=0;while(seg<lengths.length-1&&d>lengths[seg]){d-=lengths[seg];seg++}const a=pts[seg],b=pts[seg+1],t=lengths[seg]?d/lengths[seg]:0,px=(a.x+(b.x-a.x)*t)*c.width,py=(a.y+(b.y-a.y)*t)*c.height;const marker=playStrokes.find(m=>/^(offense|defense)[1-5]$/.test(m.tool)&&m.tool.endsWith(String(st.player)));const def=marker?.tool.startsWith('defense');ctx.beginPath();ctx.arc(px,py,23,0,Math.PI*2);ctx.fillStyle=def?'#dc2626':'#07558a';ctx.fill();ctx.lineWidth=3;ctx.strokeStyle='#fff';ctx.stroke();ctx.fillStyle='#fff';ctx.font='bold 23px system-ui';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(String(st.player),px,py)});
-  playAnimFrame=requestAnimationFrame(frame)};playAnimFrame=requestAnimationFrame(frame);toast('Numbered player movement running');
+ const positionAt=(pts,t)=>{
+  let lens=[],total=0;for(let i=1;i<pts.length;i++){const d=Math.hypot((pts[i].x-pts[i-1].x)*c.width,(pts[i].y-pts[i-1].y)*c.height);lens.push(d);total+=d}
+  if(!total)return pts[0];let d=t*total,i=0;while(i<lens.length-1&&d>lens[i]){d-=lens[i];i++}
+  const q=lens[i]?d/lens[i]:0;return{x:pts[i].x+(pts[i+1].x-pts[i].x)*q,y:pts[i].y+(pts[i+1].y-pts[i].y)*q};
+ };
+ const frame=now=>{
+  drawPlay({hideMarkers:true,hideBall:true});const ctx=c.getContext('2d'),elapsed=((now-playAnimStart)%5000)/5000;
+  // Draw stationary defenders and animate each offensive numbered player on their own route.
+  playStrokes.filter(st=>/^defense[1-5]$/.test(st.tool)).forEach(st=>drawMarker(ctx,st.points[0],st.tool.slice(-1),'#dc2626',c));
+  playerRoutes.forEach((st,i)=>{
+   const pos=positionAt(st.points,(elapsed+i*.11)%1);
+   drawMarker(ctx,pos,String(st.player),'#07558a',c);
+  });
+  if(ballRoute){const pos=positionAt(ballRoute.points,elapsed);drawBall(ctx,pos,c)}
+  playAnimFrame=requestAnimationFrame(frame);
+ };playAnimFrame=requestAnimationFrame(frame);toast('Players and ball movement running');
 }
+function drawMarker(ctx,pos,label,color,c){const px=pos.x*c.width,py=pos.y*c.height;ctx.beginPath();ctx.arc(px,py,23,0,Math.PI*2);ctx.fillStyle=color;ctx.fill();ctx.lineWidth=3;ctx.strokeStyle='#fff';ctx.stroke();ctx.fillStyle='#fff';ctx.font='bold 23px system-ui';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(label,px,py)}
+function drawBall(ctx,pos,c){const px=pos.x*c.width,py=pos.y*c.height;ctx.beginPath();ctx.arc(px,py,12,0,Math.PI*2);ctx.fillStyle='#f97316';ctx.fill();ctx.lineWidth=2;ctx.strokeStyle='#7c2d12';ctx.stroke();ctx.beginPath();ctx.moveTo(px-8,py);ctx.lineTo(px+8,py);ctx.moveTo(px,py-8);ctx.lineTo(px,py+8);ctx.stroke()}
+
 function printPlay(){stopPlayAnimation();const c=document.getElementById('playCanvas');if(!c)return;const url=c.toDataURL('image/png'),name=(document.getElementById('customPlayName').value||'Basketball Play').replace(/[<>]/g,''),notes=(document.getElementById('customPlayNotes').value||'').replace(/[<>]/g,'');const w=window.open('','_blank');if(!w)return toast('Allow pop-ups to print the play');w.document.write('<!doctype html><html><head><title>'+name+'</title><style>body{font-family:Arial;padding:20px;text-align:center}img{width:100%;max-width:1000px}h1{margin:0 0 8px}p{white-space:pre-wrap}</style></head><body><h1>'+name+'</h1><img src="'+url+'"><p>'+notes+'</p><script>window.onload=()=>window.print()<\/script></body></html>');w.document.close()}
 async function sharePlay(){
  stopPlayAnimation();const c=document.getElementById('playCanvas');if(!c)return;const url=c.toDataURL('image/png'),name=document.getElementById('customPlayName').value||'Basketball Play';
