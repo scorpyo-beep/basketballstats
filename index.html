@@ -34,11 +34,16 @@ input,select,textarea{width:100%;min-width:0;border:1px solid #d1d9e0;border-rad
 .form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}.plist{margin-top:7px}.pcard,.gcard{border:1px solid var(--line);border-radius:9px;padding:8px;margin:5px 0}.ptop,.ghead{display:flex;justify-content:space-between;align-items:center;gap:7px}.pname,.opp{font-size:13px;font-weight:950}.details,.date{font-size:10px;color:#64748b}.actions{display:flex;gap:4px;flex-shrink:0}.actions button{padding:7px 8px;border:0;border-radius:7px;font-size:10px}.cardBuilder{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.cardBuilder .wide{grid-column:1/-1}.cardPreview{width:100%;max-width:420px;margin:8px auto;display:block;border-radius:12px;background:#dbeafe;box-shadow:0 5px 18px #0002}.cardActions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}.cardActions button{padding:10px 6px;border:0;border-radius:8px;font-size:11px;font-weight:900}.savedCardGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.savedCard{min-width:0;border:1px solid var(--line);border-radius:10px;padding:6px;background:#f8fafc}.savedCard img{width:100%;display:block;border-radius:7px}.savedCard .actions{margin-top:5px}.savedCard .actions button{flex:1}.cardHint{font-size:11px;line-height:1.45;color:#64748b}.cropPanel{border:1px solid var(--line);background:#f8fafc;border-radius:10px;padding:9px;margin-top:7px}.cropRow{display:grid;grid-template-columns:95px minmax(0,1fr) 35px;gap:8px;align-items:center;margin:5px 0}.cropRow label{margin:0;font-size:10px}.cropRow input{padding:0;border:0}.flipHint{text-align:center;font-size:11px;font-weight:800;color:#07558a;margin:4px 0}.cardPreview{cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none}.stickerTray{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:7px 0}.stickerTray button{border:1px solid #cbd5e1;border-radius:9px;background:#f8fafc;color:#0f172a;padding:8px 4px;font-size:10px;font-weight:900;min-height:48px}.stickerTray button span{display:block;font-size:20px;margin-bottom:2px}.placedStickers{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}.placedSticker{border:0;background:transparent;border-radius:0;padding:4px 2px;font-size:10px;font-weight:800}.placedSticker button{border:0;background:transparent;color:#dc2626;font-weight:900;margin-left:4px;padding:0 2px}.savedCard img{cursor:pointer}.starRating{display:flex;gap:5px;align-items:center}.starRating button{border:0;background:transparent;color:#cbd5e1;font-size:28px;padding:0 2px;line-height:1}.starRating button.on{color:#f59e0b}.toast{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom));transform:translateX(-50%);display:none;z-index:200;background:#111827;color:#fff;padding:9px 14px;border-radius:999px;font-size:12px;font-weight:800;box-shadow:0 3px 14px #0004;max-width:90%;text-align:center}
 @media(max-width:390px){main{padding-left:5px;padding-right:5px}.card{padding:8px}.stat{height:61px}.stat b{font-size:12px}.stat span{font-size:6px}.player{min-width:108px}.game-top{grid-template-columns:minmax(0,1fr) minmax(118px,.9fr)}}
 @media(min-width:761px){main{padding-left:12px;padding-right:12px}.stats{grid-template-columns:repeat(7,minmax(0,1fr))}.stat{height:72px}.stat b{font-size:14px}.stat span{font-size:8px}.game-top{grid-template-columns:1fr 220px}.card{padding:14px}.title{font-size:18px}.nav button{font-size:12px;padding:8px 16px}}
+
+/* Coaches play pad */
+.playTools{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.playTools .wide{grid-column:1/-1}.courtWrap{width:100%;overflow:hidden;border-radius:10px;background:#e9f2e8;border:2px solid #b7c9b5;touch-action:none}.courtCanvas{display:block;width:100%;height:auto;touch-action:none;cursor:crosshair}.playBtns{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-top:7px}.playBtns button,.playTools button{border:0;border-radius:8px;padding:9px 5px;font-size:11px;font-weight:900}.playList{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.playItem{border:1px solid var(--line);border-radius:9px;padding:8px;background:#f8fafc;min-width:0}.playItem b{display:block;font-size:11px}.playItem small{display:block;color:#64748b;font-size:9px;margin:3px 0 6px}.playItem button{width:100%;border:0;border-radius:7px;padding:7px;background:var(--blue);color:white;font-size:10px;font-weight:900}.playHint{font-size:10px;line-height:1.45;color:#64748b}
+@media(min-width:761px){.playLayout{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(260px,1fr);gap:10px;align-items:start}.playList{grid-template-columns:1fr}}
+
 </style>
 </head>
 <body>
 <header><div class="head"><div class="title">🏀 Basketball Stats</div><div class="nav">
-<button id="nLive" class="active" onclick="page('live')">Live</button><button id="nSeason" onclick="page('season')">Season</button><button id="nGames" onclick="page('games')">Games</button><button id="nPlayers" onclick="page('players')">Players</button><button id="nCards" onclick="page('cards')">🏆 Cards</button><button id="nSettings" onclick="page('settings')">Settings</button>
+<button id="nLive" class="active" onclick="page('live')">Live</button><button id="nSeason" onclick="page('season')">Season</button><button id="nGames" onclick="page('games')">Games</button><button id="nPlayers" onclick="page('players')">Players</button><button id="nCards" onclick="page('cards')">🏆 Cards</button><button id="nPlays" onclick="page('plays')">📋 Plays</button><button id="nSettings" onclick="page('settings')">Settings</button>
 </div></div></header>
 <main>
 <section id="live">
@@ -96,6 +101,20 @@ input,select,textarea{width:100%;min-width:0;border:1px solid #d1d9e0;border-rad
 </div>
 <div class="card"><h2>My Card Collection</h2><div id="savedCards" class="savedCardGrid"></div><p id="noSavedCards" class="cardHint">Your saved cards will appear here.</p></div>
 </section>
+
+<section id="plays" class="hidden">
+ <div class="card"><h2>📋 Coaches Court Pad</h2><p class="playHint">Draw your own plays directly on the court. Use a finger or mouse. Choose Draw for player routes, Arrow for direction arrows, or Erase to correct a line.</p>
+ <div class="playLayout"><div>
+  <div class="courtWrap"><canvas id="playCanvas" class="courtCanvas" width="900" height="560" aria-label="Basketball court drawing pad"></canvas></div>
+  <div class="playBtns"><button class="blue" onclick="setPlayTool('draw')">✏️ Draw</button><button class="blue" onclick="setPlayTool('arrow')">➡ Arrow</button><button class="orange" onclick="setPlayTool('erase')">⌫ Erase</button><button onclick="undoPlayStroke()">↶ Undo</button><button onclick="clearPlayCourt()" class="red">Clear Court</button><button class="green" onclick="saveCustomPlay()">💾 Save Play</button></div>
+  <div class="playTools" style="margin-top:8px"><div><label>Play name</label><input id="customPlayName" placeholder="e.g. Baseline quick hitter"></div><div><label>Line colour</label><select id="playColor"><option value="#dc2626">Red</option><option value="#07558a">Blue</option><option value="#16a34a">Green</option><option value="#7c3aed">Purple</option><option value="#111827">Black</option></select></div><div class="wide"><label>Coach notes (optional)</label><input id="customPlayNotes" placeholder="Timing, player roles, reads..."></div></div>
+ </div><div>
+  <h3>Preset Playbook</h3><div class="playTools"><div><label>Category</label><select id="playCategory" onchange="renderPresetSelect()"><option>Offensive</option><option>Defensive</option><option>Inbounds</option><option>Press Break</option><option>Late Game</option></select></div><div><label>Preset play</label><select id="playPreset" onchange="loadPresetPlay()"></select></div></div>
+  <p class="playHint">Choose a category and play to load its diagram onto the court. You can then draw over it, add arrows, or save your variation.</p>
+  <div id="presetDescription" class="playHint" style="padding:8px;background:#f1f5f9;border-radius:8px;margin:7px 0"></div>
+  <h3 style="margin-top:12px">My Saved Plays</h3><div id="savedPlays" class="playList"></div><p id="noSavedPlays" class="playHint">Your saved plays will appear here.</p>
+ </div></div></div>
+</section>
 <section id="settings" class="hidden"><div class="card"><h2>Backup &amp; Data</h2><p class="muted" style="font-size:11px">Your players and saved games are stored on this device. Export a backup regularly.</p>
 <button class="blue full" style="padding:9px;border:0;border-radius:8px" onclick="exportData()">⬇ Export Backup</button>
 <label style="margin-top:6px;padding:9px;background:#e5e7eb;border-radius:8px;text-align:center;text-transform:none">⬆ Import Backup<input id="import" type="file" accept=".json,application/json" onchange="importData(event)" style="display:none"></label>
@@ -129,7 +148,7 @@ function save(){try{localStorage.setItem(KEY,JSON.stringify(data));localStorage.
 function row(id){if(!live.rows[id]||typeof live.rows[id]!=='object')live.rows[id]=blank();const r=live.rows[id];for(const k of Object.keys(blank()))r[k]=Math.max(0,Number(r[k])||0);return r}
 function esc(x){return String(x??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
 function toast(x){const e=document.getElementById('toast');e.textContent=x;e.style.display='block';clearTimeout(e.t);e.t=setTimeout(()=>e.style.display='none',1800)}
-function page(p){document.querySelectorAll('main>section').forEach(s=>s.classList.add('hidden'));const sec=document.getElementById(p==='players'?'playersPage':p);if(sec)sec.classList.remove('hidden');document.querySelectorAll('.nav button').forEach(b=>b.classList.remove('active'));const b=document.getElementById('n'+p[0].toUpperCase()+p.slice(1));if(b)b.classList.add('active');if(p==='season')season();if(p==='games')games();if(p==='players')renderPlayersPage();if(p==='cards'){renderCardStudio();attachCardGestures()}window.scrollTo(0,0)}
+function page(p){document.querySelectorAll('main>section').forEach(s=>s.classList.add('hidden'));const sec=document.getElementById(p==='players'?'playersPage':p);if(sec)sec.classList.remove('hidden');document.querySelectorAll('.nav button').forEach(b=>b.classList.remove('active'));const b=document.getElementById('n'+p[0].toUpperCase()+p.slice(1));if(b)b.classList.add('active');if(p==='season')season();if(p==='games')games();if(p==='players')renderPlayersPage();if(p==='cards'){renderCardStudio();attachCardGestures()}if(p==='plays'){initPlays()}window.scrollTo(0,0)}
 function select(id){if(timerRunning)pauseTimer(false);selectedPlayer=id;timerPlayerId=id;row(id);render();save()}
 function renderPlayersBar(){const e=document.getElementById('playerBar');if(!data.players.length){e.innerHTML='';document.getElementById('noPlayers').style.display='block';selectedPlayer=null;timerPlayerId=null;displaySelected();updateGameClock();return}document.getElementById('noPlayers').style.display='none';if(!selectedPlayer||!data.players.some(p=>String(p.id)===String(selectedPlayer)))selectedPlayer=data.players[0].id;timerPlayerId=selectedPlayer;e.innerHTML=data.players.map(p=>`<button class="player ${String(p.id)===String(selectedPlayer)?'sel':''}" onclick="select('${esc(p.id)}')">#${esc(p.num)} ${esc(p.name)}</button>`).join('');displaySelected()}
 function displaySelected(){const p=data.players.find(p=>String(p.id)===String(selectedPlayer));document.getElementById('selected').textContent=p?'#'+(p.num||'')+' '+p.name:'No player selected';document.getElementById('timerPlayer').textContent=p?'#'+(p.num||'')+' '+p.name:'Select a player'}
@@ -240,10 +259,96 @@ function flipSavedCard(id,img){const c=sportsCards.find(x=>String(x.id)===String
 function downloadSavedCard(id,side='front'){const c=sportsCards.find(x=>String(x.id)===String(id));if(!c)return;const src=side==='back'?(c.backImage||c.image):c.image;const a=document.createElement('a');a.href=src;a.download=(c.playerName||'player').replace(/[^a-z0-9_-]+/gi,'-').toLowerCase()+'-basketball-card-'+side+'.jpg';document.body.appendChild(a);a.click();a.remove()}
 function deleteSavedCard(id){if(!confirm('Delete this saved card?'))return;sportsCards=sportsCards.filter(c=>String(c.id)!==String(id));try{localStorage.setItem(CARDS_KEY,JSON.stringify(sportsCards));renderSavedCards();toast('Card deleted')}catch(_){toast('Could not update card collection')}}
 
-function exportData(){let url;try{const backup={version:1,exportedAt:new Date().toISOString(),players:data.players,games:data.games};const blob=new Blob([JSON.stringify(backup,null,2)],{type:'application/json'});url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='basketball-stat-tracker-backup.json';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),2000);toast('Backup export started')}catch(err){if(url)URL.revokeObjectURL(url);alert('Could not export backup. Please try again.')}}
-function importData(e){const file=e.target.files&&e.target.files[0];if(!file)return;const reader=new FileReader();reader.onload=()=>{try{const backup=JSON.parse(reader.result);const validPlayers=backup&&Array.isArray(backup.players)&&backup.players.every(p=>p&&typeof p==='object'&&p.id!==undefined&&typeof p.name==='string');const validGames=backup&&Array.isArray(backup.games)&&backup.games.every(g=>g&&typeof g==='object'&&!Array.isArray(g));if(!validPlayers||!validGames)throw new Error('Invalid backup');if(!confirm('Import this backup? Your current player and game lists will be replaced. Export your current backup first if you want to keep it.'))return;const next={players:backup.players,games:backup.games.map(g=>({...g,rows:g.rows&&typeof g.rows==='object'&&!Array.isArray(g.rows)?g.rows:{}}))};const previous=data;data=next;if(!save()){data=previous;return}render();toast('Backup imported')}catch(err){alert('Invalid or unreadable Basketball Stats backup. Your current lists have not been replaced.')}finally{e.target.value=''}};reader.onerror=()=>{alert('Could not read the backup file.');e.target.value=''};reader.readAsText(file)}
+function exportData(){let url;try{const backup={version:2,exportedAt:new Date().toISOString(),players:data.players,games:data.games,plays:JSON.parse(localStorage.getItem(PLAYS_KEY)||'[]')};const blob=new Blob([JSON.stringify(backup,null,2)],{type:'application/json'});url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='basketball-stat-tracker-backup.json';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),2000);toast('Backup export started')}catch(err){if(url)URL.revokeObjectURL(url);alert('Could not export backup. Please try again.')}}
+function importData(e){const file=e.target.files&&e.target.files[0];if(!file)return;const reader=new FileReader();reader.onload=()=>{try{const backup=JSON.parse(reader.result);const validPlayers=backup&&Array.isArray(backup.players)&&backup.players.every(p=>p&&typeof p==='object'&&p.id!==undefined&&typeof p.name==='string');const validGames=backup&&Array.isArray(backup.games)&&backup.games.every(g=>g&&typeof g==='object'&&!Array.isArray(g));const validPlays=backup&&backup.plays===undefined||Array.isArray(backup.plays);if(!validPlayers||!validGames||!validPlays)throw new Error('Invalid backup');if(!confirm('Import this backup? Your current player and game lists will be replaced. Export your current backup first if you want to keep it.'))return;const next={players:backup.players,games:backup.games.map(g=>({...g,rows:g.rows&&typeof g.rows==='object'&&!Array.isArray(g.rows)?g.rows:{}}))};const previous=data;data=next;if(!save()){data=previous;return}if(Array.isArray(backup.plays)){playSaved=backup.plays;localStorage.setItem(PLAYS_KEY,JSON.stringify(playSaved))}render();toast('Backup imported')}catch(err){alert('Invalid or unreadable Basketball Stats backup. Your current lists have not been replaced.')}finally{e.target.value=''}};reader.onerror=()=>{alert('Could not read the backup file.');e.target.value=''};reader.readAsText(file)}
 function clearData(){if(!confirm('DELETE ALL PLAYERS AND GAMES? This cannot be undone unless you have exported a backup.'))return;if(timerInterval)clearInterval(timerInterval);timerInterval=null;timerRunning=false;timerStartedAt=0;timerPlayerId=null;selectedPlayer=null;editing=null;data={players:[],games:[]};live={opponent:'',date:today(),notes:'',q:1,score:0,teamHistory:[],rows:{},history:[],timer:{running:false,playerId:null,startedAt:0}};clearForm();setEditMode(false);save();render();toast('All data deleted')}
 function syncInputs(){live.opponent=document.getElementById('opponent').value;live.date=document.getElementById('date').value||today();live.notes=document.getElementById('notes').value}
+
+// Coaches Play Pad — stored separately so player/game data is never changed.
+const PLAYS_KEY='basketball_plays_samsung_v1';
+let playTool='draw',playStrokes=[],playPointer=null,playSaved=[];
+const PRESET_PLAYS={
+'Offensive':[
+ ['5-Out Motion','Space five players around the arc; pass, cut hard, and fill the open spot.','motion'],
+ ['Horns','Two bigs start at the elbows; use a ball screen or handoff to attack.','horns'],
+ ['Pick and Roll','High ball screen; handler attacks the lane while screener rolls to the rim.','pnr'],
+ ['Give and Go','Pass to the wing, cut immediately to the basket, receive the return pass.','givego'],
+ ['UCLA Cut','Wing entry pass triggers a baseline cut off an elbow screen.','ucla'],
+ ['Floppy','Shooter uses staggered baseline screens to get open on either side.','floppy'],
+ ['Box Set','Four players form a box; screen down to free a cutter near the rim.','box'],
+ ['Flex Offense','Pass, basket cut, and cross-screen along the baseline.','flex']
+],
+'Defensive':[
+ ['Man-to-Man','Each defender matches up; on-ball pressure with help-side positioning.','man'],
+ ['2–3 Zone','Two defenders pressure the top; three protect the lane and baseline.','zone23'],
+ ['3–2 Zone','Three defenders cover the perimeter; two protect the paint.','zone32'],
+ ['1–3–1 Zone','One defender up top, three across the middle, one protecting the rim.','zone131'],
+ ['Full-Court Man','Match up full court and pressure the ball without losing help position.','fullman'],
+ ['Box-and-One','Four defenders play zone while one shadows the primary scorer.','boxone']
+],
+'Inbounds':[
+ ['Baseline Box','Four players start in a box; use screens to free a rim cutter or corner shooter.','baselinebox'],
+ ['Baseline Stack','Stack near the lane; first cutter clears while the next curls to the rim.','stack'],
+ ['Sideline Box','Box alignment near sideline; screen the inbounder’s defender and create a safety pass.','sidelinebox'],
+ ['Sideline Zipper','Player zips from low block to top using a screen for a quick catch.','zipper']
+],
+'Press Break':[
+ ['1–4 Press Break','One inbounder and four across; flash middle and attack behind the press.','press14'],
+ ['2–1–2 Press Break','Two guards, middle flash, and two deep outlets stretch the press.','press212'],
+ ['Diamond Press Break','Use middle release and diagonal passing lanes to beat a diamond trap.','diamond']
+],
+'Late Game':[
+ ['2-for-1 Quick Hit','Create an early quality shot while leaving time for a final possession.','twoforone'],
+ ['Sideline ATO','Sideline out-of-bounds action for a quick catch-and-shoot or slip.','ato'],
+ ['Need a 3','Spread the floor, use a double screen, and create a three-point look.','need3'],
+ ['Protect the Lead','Safe outlet spacing, strong ball-side support, and a backcourt safety.','protect']
+]};
+function courtBase(){const c=document.getElementById('playCanvas');if(!c)return;const x=c.getContext('2d'),w=c.width,h=c.height;x.clearRect(0,0,w,h);x.fillStyle='#e8f0e5';x.fillRect(0,0,w,h);x.strokeStyle='#9bad99';x.lineWidth=5;x.strokeRect(18,18,w-36,h-36);x.lineWidth=3;x.beginPath();x.moveTo(w/2,18);x.lineTo(w/2,h-18);x.stroke();x.beginPath();x.arc(w/2,h/2,78,0,Math.PI*2);x.stroke();
+ // baskets and keys at both ends
+ for(const side of [0,1]){const bx=side? w-78:78,dir=side?-1:1;x.beginPath();x.arc(bx, h/2, 13,0,Math.PI*2);x.stroke();x.beginPath();x.moveTo(side?w-18:18,h/2-70);x.lineTo(side?w-18:18,h/2+70);x.stroke();x.strokeRect(side?w-190:18,h/2-115,172,230);x.beginPath();x.arc(side?w-190:190,h/2,115,side?Math.PI/2:-Math.PI/2,side?Math.PI*1.5:Math.PI/2);x.stroke();x.beginPath();x.arc(bx,h/2,58,0,Math.PI*2);x.stroke();}
+ x.fillStyle='#64748b';x.font='bold 17px system-ui';x.textAlign='center';x.fillText('OFFENSE →',w/2,h-30);}
+function drawPlay(){const c=document.getElementById('playCanvas');if(!c)return;courtBase();const x=c.getContext('2d');playStrokes.forEach(st=>{if(!st.points||st.points.length<1)return;x.strokeStyle=st.color||'#dc2626';x.fillStyle=st.color||'#dc2626';x.lineWidth=st.tool==='erase'?18:6;x.lineCap='round';x.lineJoin='round';x.beginPath();x.moveTo(st.points[0].x*c.width,st.points[0].y*c.height);st.points.slice(1).forEach(pt=>x.lineTo(pt.x*c.width,pt.y*c.height));x.stroke();if(st.tool==='arrow'&&st.points.length>1){const a=st.points[st.points.length-2],b=st.points[st.points.length-1],ax=a.x*c.width,ay=a.y*c.height,bx=b.x*c.width,by=b.y*c.height,ang=Math.atan2(by-ay,bx-ax),len=25;x.beginPath();x.moveTo(bx,by);x.lineTo(bx-len*Math.cos(ang-.5),by-len*Math.sin(ang-.5));x.lineTo(bx-len*Math.cos(ang+.5),by-len*Math.sin(ang+.5));x.closePath();x.fill()}})}
+function setPlayTool(t){playTool=t;toast(t==='draw'?'Draw mode':t==='arrow'?'Arrow mode':'Erase mode')}
+function playPos(e){const r=e.currentTarget.getBoundingClientRect();return{x:Math.max(0,Math.min(1,(e.clientX-r.left)/r.width)),y:Math.max(0,Math.min(1,(e.clientY-r.top)/r.height))}}
+function setupPlayCanvas(){const c=document.getElementById('playCanvas');if(!c||c.dataset.ready)return;c.dataset.ready='1';c.addEventListener('pointerdown',e=>{e.preventDefault();c.setPointerCapture(e.pointerId);playPointer=e.pointerId;playStrokes.push({tool:playTool,color:playTool==='erase'?'#e8f0e5':document.getElementById('playColor').value,points:[playPos(e)]});drawPlay()});c.addEventListener('pointermove',e=>{if(playPointer!==e.pointerId)return;const st=playStrokes[playStrokes.length-1];st.points.push(playPos(e));drawPlay()});const end=e=>{if(playPointer===e.pointerId)playPointer=null};c.addEventListener('pointerup',end);c.addEventListener('pointercancel',end);drawPlay()}
+function undoPlayStroke(){playStrokes.pop();drawPlay()}
+function clearPlayCourt(){if(!confirm('Clear the court drawing?'))return;playStrokes=[];drawPlay()}
+function saveCustomPlay(){const name=document.getElementById('customPlayName').value.trim();if(!name)return toast('Enter a play name');if(!playStrokes.length)return toast('Draw or load a play first');playSaved.unshift({id:Date.now().toString(),name,category:'Custom',notes:document.getElementById('customPlayNotes').value,strokes:JSON.parse(JSON.stringify(playStrokes))});try{localStorage.setItem(PLAYS_KEY,JSON.stringify(playSaved));renderSavedPlays();toast('Play saved')}catch(e){playSaved.shift();toast('Could not save. Device storage may be full.')}}
+function loadSavedPlay(id){const p=playSaved.find(x=>x.id===id);if(!p)return;playStrokes=JSON.parse(JSON.stringify(p.strokes||[]));document.getElementById('customPlayName').value=p.name||'';document.getElementById('customPlayNotes').value=p.notes||'';drawPlay();toast('Play loaded')}
+function deleteSavedPlay(id){if(!confirm('Delete this saved play?'))return;playSaved=playSaved.filter(p=>p.id!==id);localStorage.setItem(PLAYS_KEY,JSON.stringify(playSaved));renderSavedPlays()}
+function renderSavedPlays(){const el=document.getElementById('savedPlays'),empty=document.getElementById('noSavedPlays');if(!el)return;el.innerHTML=playSaved.map(p=>`<div class="playItem"><b>${esc(p.name)}</b><small>${esc(p.category||'Custom')}${p.notes?' · '+esc(p.notes):''}</small><button onclick="loadSavedPlay('${esc(p.id)}')">Load Play</button><button style="margin-top:4px;background:#dc2626" onclick="deleteSavedPlay('${esc(p.id)}')">Delete</button></div>`).join('');empty.style.display=playSaved.length?'none':'block'}
+function renderPresetSelect(){const cat=document.getElementById('playCategory').value,sel=document.getElementById('playPreset');sel.innerHTML=PRESET_PLAYS[cat].map((p,i)=>`<option value="${i}">${esc(p[0])}</option>`).join('');loadPresetPlay()}
+function presetStrokes(code){const P=(arr,color='#dc2626',tool='draw')=>({tool,color,points:arr.map(([x,y])=>({x,y}))});const player=(x,y,n,color='#07558a')=>P([[x,y],[x+.0001,y+.0001]],color,'player'+n);
+ const sets={
+ motion:[P([[.22,.28],[.38,.2],[.5,.28],[.65,.2],[.78,.28]]) ,P([[.22,.28],[.35,.52],[.5,.28]]) ,P([[.78,.28],[.67,.52],[.5,.28]])],
+ horns:[P([[.5,.78],[.5,.58],[.5,.36],[.68,.22]]) ,P([[.35,.42],[.5,.58],[.62,.73]]) ,P([[.65,.42],[.5,.58],[.5,.28]])],
+ pnr:[P([[.35,.72],[.48,.54],[.63,.4],[.78,.25]]) ,P([[.5,.5],[.5,.35],[.65,.2]])],
+ givego:[P([[.28,.5],[.48,.43]]) ,P([[.48,.43],[.42,.65],[.5,.8]])],
+ ucla:[P([[.25,.3],[.45,.35]]) ,P([[.45,.35],[.3,.65],[.5,.82]])],
+ floppy:[P([[.22,.78],[.35,.58],[.55,.55],[.73,.35]]) ,P([[.22,.78],[.4,.75],[.7,.68]])],
+ box:[P([[.3,.35],[.48,.5],[.7,.28]]) ,P([[.7,.35],[.55,.5],[.5,.8]])],
+ flex:[P([[.25,.28],[.42,.45],[.5,.75]]) ,P([[.72,.28],[.58,.45],[.5,.75]])],
+ man:[P([[.22,.25],[.27,.3]]) ,P([[.38,.35],[.4,.4]]) ,P([[.55,.3],[.56,.35]]) ,P([[.72,.25],[.7,.3]]) ,P([[.5,.72],[.5,.68]])],
+ zone23:[P([[.3,.28],[.35,.3]]) ,P([[.7,.28],[.65,.3]]) ,P([[.25,.52],[.3,.55]]) ,P([[.5,.6],[.5,.62]]) ,P([[.75,.52],[.7,.55]])],
+ zone32:[P([[.25,.28],[.3,.3]]) ,P([[.5,.25],[.5,.3]]) ,P([[.75,.28],[.7,.3]]) ,P([[.38,.62],[.4,.65]]) ,P([[.62,.62],[.6,.65]])],
+ zone131:[P([[.5,.2],[.5,.28]]) ,P([[.25,.42],[.3,.45]]) ,P([[.5,.42],[.5,.48]]) ,P([[.75,.42],[.7,.45]]) ,P([[.5,.75],[.5,.7]])],
+ fullman:[P([[.2,.18],[.23,.25]]) ,P([[.4,.28],[.42,.35]]) ,P([[.6,.28],[.58,.35]]) ,P([[.8,.18],[.77,.25]]) ,P([[.5,.72],[.5,.65]])],
+ boxone:[P([[.3,.3],[.32,.35]]) ,P([[.7,.3],[.68,.35]]) ,P([[.3,.62],[.32,.58]]) ,P([[.7,.62],[.68,.58]]) ,P([[.5,.2],[.5,.25]])],
+ baselinebox:[P([[.32,.32],[.5,.5],[.5,.78]]) ,P([[.68,.32],[.58,.5],[.78,.7]]) ,P([[.5,.25],[.5,.42],[.3,.68]])],
+ stack:[P([[.5,.28],[.5,.45],[.72,.72]]) ,P([[.5,.35],[.3,.55],[.25,.78]]) ,P([[.5,.45],[.5,.72]])],
+ sidelinebox:[P([[.25,.28],[.45,.45],[.7,.65]]) ,P([[.4,.28],[.55,.45],[.75,.3]])],
+ zipper:[P([[.35,.75],[.35,.55],[.5,.35],[.7,.2]])],
+ press14:[P([[.2,.3],[.4,.45],[.55,.5],[.8,.35]]) ,P([[.5,.5],[.7,.7]])],
+ press212:[P([[.25,.3],[.45,.45],[.5,.5],[.78,.28]]) ,P([[.75,.3],[.62,.55],[.8,.78]])],
+ diamond:[P([[.5,.25],[.5,.45],[.72,.6],[.85,.78]]) ,P([[.5,.45],[.3,.6],[.15,.78]])],
+ twoforone:[P([[.25,.7],[.4,.52],[.62,.38],[.8,.2]])],
+ ato:[P([[.2,.5],[.42,.5],[.55,.3],[.75,.25]]) ,P([[.42,.5],[.5,.72]])],
+ need3:[P([[.2,.3],[.4,.45],[.65,.35],[.82,.2]]) ,P([[.5,.65],[.65,.5],[.82,.2]])],
+ protect:[P([[.25,.28],[.4,.4],[.5,.55],[.72,.6]]) ,P([[.75,.28],[.65,.4],[.5,.55]])]};
+ const base=sets[code]||[];return base.map(st=>({...st,points:st.points.map(pt=>({...pt}))}));}
+function loadPresetPlay(){const cat=document.getElementById('playCategory').value,idx=Number(document.getElementById('playPreset').value)||0,p=PRESET_PLAYS[cat][idx];if(!p)return;playStrokes=presetStrokes(p[2]);document.getElementById('customPlayName').value=p[0];document.getElementById('customPlayNotes').value=p[1];document.getElementById('presetDescription').textContent=p[1];drawPlay()}
+function initPlays(){try{const v=JSON.parse(localStorage.getItem(PLAYS_KEY)||'[]');playSaved=Array.isArray(v)?v:[]}catch(_){playSaved=[]}setupPlayCanvas();renderPresetSelect();renderSavedPlays()}
+
 function render(){document.getElementById('opponent').value=live.opponent||'';document.getElementById('date').value=live.date||today();document.getElementById('notes').value=live.notes||'';document.getElementById('q').textContent='Q'+live.q;document.getElementById('score').textContent=Number(live.score)||0;renderPlayersBar();displaySelected();updateGameClock();renderTable();renderPlayersPage();season();games()}
 ['opponent','date','notes'].forEach(id=>document.getElementById(id).addEventListener(id==='date'?'change':'input',()=>{syncInputs();save()}));
 recoverTimer();render();updateGameClock();drawCardPlaceholder();renderStickerTray();attachCardGestures();
