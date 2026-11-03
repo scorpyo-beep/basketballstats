@@ -43,7 +43,7 @@ input,select,textarea{width:100%;min-width:0;border:1px solid #d1d9e0;border-rad
 </head>
 <body>
 <header><div class="head"><div class="title">🏀 Basketball Stats</div><div class="nav">
-<button id="nLive" class="active" onclick="page('live')">Live</button><button id="nSeason" onclick="page('season')">Season</button><button id="nGames" onclick="page('games')">Games</button><button id="nPlayers" onclick="page('players')">Players</button><button id="nCards" onclick="page('cards')">🏆 Cards</button><button id="nPlays" onclick="page('plays')">📋 Plays</button><button id="nSettings" onclick="page('settings')">Settings</button>
+<button id="nLive" class="active" onclick="page('live')">Live</button><button id="nSeason" onclick="page('season')">Season</button><button id="nGames" onclick="page('games')">Games</button><button id="nPlayers" onclick="page('players')">Players</button><button id="nCards" onclick="page('cards')">🏆 Cards</button><button id="nPlays" onclick="page('plays')">📋 Plays</button><button id="nTeamChat" onclick="page('teamChat')">💬 Team Chat</button><button id="nSettings" onclick="page('settings')">Settings</button>
 </div></div></header>
 <main>
 <section id="live">
@@ -114,9 +114,48 @@ input,select,textarea{width:100%;min-width:0;border:1px solid #d1d9e0;border-rad
   <h3>Preset Playbook</h3><div class="playTools"><div><label>Category</label><select id="playCategory" onchange="renderPresetSelect()"><option>Offensive</option><option>Defensive</option><option>Inbounds</option><option>Press Break</option><option>Late Game</option></select></div><div><label>Preset play</label><select id="playPreset" onchange="loadPresetPlay()"></select></div></div>
   <p class="playHint">Choose a category and play to load its diagram onto the court. You can then draw over it, add arrows, or save your variation.</p>
   <div id="presetDescription" class="playHint" style="padding:8px;background:#f1f5f9;border-radius:8px;margin:7px 0"></div>
+  <a id="presetVideoLink" href="https://www.youtube.com/results?search_query=basketball+play+demonstration" target="_blank" rel="noopener" style="display:block;text-align:center;margin:8px 0;padding:10px;background:#07558a;color:white;border-radius:8px;text-decoration:none;font-weight:700">▶ Watch a video demonstration of this play</a>
   <h3 style="margin-top:12px">My Saved Plays</h3><div id="savedPlays" class="playList"></div><p id="noSavedPlays" class="playHint">Your saved plays will appear here.</p>
  </div></div></div>
 </section>
+
+<section id="teamChat" class="hidden">
+ <div class="card">
+  <h2>💬 Team Chat</h2>
+  <p class="playHint">Connect the app to a shared Firebase Realtime Database to message teammates and coaches across devices. Until configured, messages are not sent to anyone else.</p>
+  <div class="playTools">
+   <div><label>Your display name</label><input id="chatDisplayName" maxlength="32" placeholder="e.g. Coach Alex"></div>
+   <div><label>Team code</label><input id="chatTeamCode" maxlength="32" placeholder="e.g. U16-BLUE"></div>
+  </div>
+  <details style="margin:10px 0">
+   <summary style="font-weight:700;cursor:pointer">Connect team messaging (one-time setup)</summary>
+   <p class="playHint">Create a Firebase project, enable Authentication → Anonymous, and create a Realtime Database. Paste the Firebase web app configuration below.</p>
+   <label>Firebase API Key</label><input id="fbApiKey" placeholder="AIza...">
+   <label>Firebase Auth Domain</label><input id="fbAuthDomain" placeholder="your-project.firebaseapp.com">
+   <label>Firebase Database URL</label><input id="fbDatabaseURL" placeholder="https://your-project-default-rtdb.firebaseio.com">
+   <label>Firebase Project ID</label><input id="fbProjectId" placeholder="your-project-id">
+   <label>Firebase App ID</label><input id="fbAppId" placeholder="1:...:web:...">
+   <button class="blue full" style="margin-top:8px" onclick="connectTeamChat()">Connect Firebase</button>
+   <pre style="white-space:pre-wrap;overflow-wrap:anywhere;background:#f1f5f9;padding:10px;border-radius:8px;font-size:11px">{
+  "rules": {
+    "teamChats": {
+      "$team": {
+        ".read": "auth != null",
+        ".write": "auth != null"
+      }
+    }
+  }
+}</pre>
+   <p class="playHint">These basic rules allow any authenticated user of this Firebase project to read/write team chats. For a private team, use stricter membership-based rules before sharing it widely.</p>
+  </details>
+  <div id="chatStatus" class="playHint" style="padding:9px;background:#f1f5f9;border-radius:8px">Not connected — configure Firebase to enable shared messaging.</div>
+  <div id="teamMessages" style="height:300px;overflow-y:auto;border:1px solid #d1d5db;border-radius:9px;padding:9px;margin:10px 0;background:#f8fafc"></div>
+  <label>Message your team</label>
+  <div style="display:flex;gap:7px;align-items:stretch"><input id="teamMessageInput" maxlength="1000" placeholder="Type a message..." style="flex:1;min-width:0"><button class="blue" onclick="sendTeamMessage()">Send</button></div>
+  <p class="playHint">Use first names or coach/player nicknames. Avoid sharing private information, especially about youth players.</p>
+ </div>
+</section>
+
 <section id="settings" class="hidden"><div class="card"><h2>Backup &amp; Data</h2><p class="muted" style="font-size:11px">Your players and saved games are stored on this device. Export a backup regularly.</p>
 <button class="blue full" style="padding:9px;border:0;border-radius:8px" onclick="exportData()">⬇ Export Backup</button>
 <label style="margin-top:6px;padding:9px;background:#e5e7eb;border-radius:8px;text-align:center;text-transform:none">⬆ Import Backup<input id="import" type="file" accept=".json,application/json" onchange="importData(event)" style="display:none"></label>
@@ -150,7 +189,7 @@ function save(){try{localStorage.setItem(KEY,JSON.stringify(data));localStorage.
 function row(id){if(!live.rows[id]||typeof live.rows[id]!=='object')live.rows[id]=blank();const r=live.rows[id];for(const k of Object.keys(blank()))r[k]=Math.max(0,Number(r[k])||0);return r}
 function esc(x){return String(x??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
 function toast(x){const e=document.getElementById('toast');e.textContent=x;e.style.display='block';clearTimeout(e.t);e.t=setTimeout(()=>e.style.display='none',1800)}
-function page(p){document.querySelectorAll('main>section').forEach(s=>s.classList.add('hidden'));const sec=document.getElementById(p==='players'?'playersPage':p);if(sec)sec.classList.remove('hidden');document.querySelectorAll('.nav button').forEach(b=>b.classList.remove('active'));const b=document.getElementById('n'+p[0].toUpperCase()+p.slice(1));if(b)b.classList.add('active');if(p==='season')season();if(p==='games')games();if(p==='players')renderPlayersPage();if(p==='cards'){renderCardStudio();attachCardGestures()}if(p==='plays'){initPlays()}window.scrollTo(0,0)}
+function page(p){document.querySelectorAll('main>section').forEach(s=>s.classList.add('hidden'));const sec=document.getElementById(p==='players'?'playersPage':p==='teamChat'?'teamChat':p);if(sec)sec.classList.remove('hidden');document.querySelectorAll('.nav button').forEach(b=>b.classList.remove('active'));const b=document.getElementById(p==='teamChat'?'nTeamChat':'n'+p[0].toUpperCase()+p.slice(1));if(b)b.classList.add('active');if(p==='season')season();if(p==='games')games();if(p==='players')renderPlayersPage();if(p==='cards'){renderCardStudio();attachCardGestures()}if(p==='plays'){initPlays()}window.scrollTo(0,0)}
 function select(id){if(timerRunning)pauseTimer(false);selectedPlayer=id;timerPlayerId=id;row(id);render();save()}
 function renderPlayersBar(){const e=document.getElementById('playerBar');if(!data.players.length){e.innerHTML='';document.getElementById('noPlayers').style.display='block';selectedPlayer=null;timerPlayerId=null;displaySelected();updateGameClock();return}document.getElementById('noPlayers').style.display='none';if(!selectedPlayer||!data.players.some(p=>String(p.id)===String(selectedPlayer)))selectedPlayer=data.players[0].id;timerPlayerId=selectedPlayer;e.innerHTML=data.players.map(p=>`<button class="player ${String(p.id)===String(selectedPlayer)?'sel':''}" onclick="select('${esc(p.id)}')">#${esc(p.num)} ${esc(p.name)}</button>`).join('');displaySelected()}
 function displaySelected(){const p=data.players.find(p=>String(p.id)===String(selectedPlayer));document.getElementById('selected').textContent=p?'#'+(p.num||'')+' '+p.name:'No player selected';document.getElementById('timerPlayer').textContent=p?'#'+(p.num||'')+' '+p.name:'Select a player'}
@@ -429,7 +468,7 @@ function presetStrokes(code){
  out.push({tool:'pass',player:1,color:'#16a34a',points:[{x:form[0][0]+.035,y:form[0][1]},{x:receiver[0]+.035,y:receiver[1]},{x:.72,y:.50}]});
  return out;
 }
-function loadPresetPlay(){const cat=document.getElementById('playCategory').value,idx=Number(document.getElementById('playPreset').value)||0,p=PRESET_PLAYS[cat][idx];if(!p)return;playStrokes=presetStrokes(p[2]);document.getElementById('customPlayName').value=p[0];document.getElementById('customPlayNotes').value=p[1];document.getElementById('presetDescription').textContent=p[1];drawPlay()}
+function loadPresetPlay(){stopPlayAnimation();const cat=document.getElementById('playCategory').value,idx=Number(document.getElementById('playPreset').value)||0,p=PRESET_PLAYS[cat][idx];if(!p)return;playStrokes=presetStrokes(p[2]);document.getElementById('customPlayName').value=p[0];document.getElementById('customPlayNotes').value=p[1];document.getElementById('presetDescription').textContent=p[1];const v=document.getElementById('presetVideoLink');if(v){v.href='https://www.youtube.com/results?search_query='+encodeURIComponent('basketball '+p[0]+' play demonstration coaching');v.textContent='▶ Watch a video demonstration: '+p[0]}drawPlay()}
 function savePlayVariation(){
  const baseName=document.getElementById('customPlayName').value.trim()||'Basketball Play';
  const name=prompt('Name this variation:',baseName+' - Variation');if(!name)return;
@@ -440,28 +479,56 @@ function savePlayVariation(){
 }
 function stopPlayAnimation(){if(playAnimFrame)cancelAnimationFrame(playAnimFrame);playAnimFrame=null;drawPlay()}
 function animatePlay(){
- stopPlayAnimation();const c=document.getElementById('playCanvas');if(!c)return;
- const routes=playStrokes.filter(st=>st.player&&st.points?.length>1&&(st.tool==='arrow'||st.tool==='pass'));
- const playerRoutes=routes.filter(st=>st.tool==='arrow');
- const ballRoute=routes.find(st=>st.tool==='pass');
- if(!playerRoutes.length&&!ballRoute)return toast('This preset has no movement or pass routes');
- playAnimStart=performance.now();
- const positionAt=(pts,t)=>{
-  let lens=[],total=0;for(let i=1;i<pts.length;i++){const d=Math.hypot((pts[i].x-pts[i-1].x)*c.width,(pts[i].y-pts[i-1].y)*c.height);lens.push(d);total+=d}
-  if(!total)return pts[0];let d=t*total,i=0;while(i<lens.length-1&&d>lens[i]){d-=lens[i];i++}
-  const q=lens[i]?d/lens[i]:0;return{x:pts[i].x+(pts[i+1].x-pts[i].x)*q,y:pts[i].y+(pts[i+1].y-pts[i].y)*q};
+ stopPlayAnimation();
+ const c=document.getElementById('playCanvas');if(!c)return;
+ const playerRoutes=playStrokes.filter(st=>st.player&&st.tool==='arrow'&&st.points&&st.points.length>1);
+ const ballRoute=playStrokes.find(st=>st.player&&st.tool==='pass'&&st.points&&st.points.length>1);
+ if(!playerRoutes.length&&!ballRoute)return toast('This play has no player or passing routes');
+
+ const makePath=st=>{
+  const segments=[];let total=0;
+  for(let i=1;i<st.points.length;i++){
+   const a=st.points[i-1],b=st.points[i];
+   const len=Math.hypot((b.x-a.x)*c.width,(b.y-a.y)*c.height);
+   segments.push({a,b,len});total+=len;
+  }
+  return {segments,total};
  };
+ const paths=playerRoutes.map(st=>({player:st.player,path:makePath(st)}));
+ const passPath=ballRoute?makePath(ballRoute):null;
+ const at=(path,t)=>{
+  if(!path||!path.total)return path?.segments?.[0]?.a||{x:.5,y:.5};
+  let d=Math.max(0,Math.min(1,t))*path.total;
+  for(let i=0;i<path.segments.length;i++){
+   const seg=path.segments[i];
+   if(d<=seg.len||i===path.segments.length-1){
+    const f=seg.len?Math.min(1,d/seg.len):0;
+    return {x:seg.a.x+(seg.b.x-seg.a.x)*f,y:seg.a.y+(seg.b.y-seg.a.y)*f};
+   }
+   d-=seg.len;
+  }
+  return path.segments[path.segments.length-1].b;
+ };
+ const duration=6500;
+ playAnimStart=performance.now();
  const frame=now=>{
-  drawPlay({hideMarkers:true,hideBall:true});const ctx=c.getContext('2d'),elapsed=((now-playAnimStart)%5000)/5000;
-  // Draw stationary defenders and animate each offensive numbered player on their own route.
+  const progress=Math.min(1,(now-playAnimStart)/duration);
+  drawPlay({hideMarkers:true,hideBall:true});
+  const ctx=c.getContext('2d');
   playStrokes.filter(st=>/^defense[1-5]$/.test(st.tool)).forEach(st=>drawMarker(ctx,st.points[0],st.tool.slice(-1),'#dc2626',c));
-  playerRoutes.forEach((st,i)=>{
-   const pos=positionAt(st.points,(elapsed+i*.11)%1);
-   drawMarker(ctx,pos,String(st.player),'#07558a',c);
-  });
-  if(ballRoute){const pos=positionAt(ballRoute.points,elapsed);drawBall(ctx,pos,c)}
-  playAnimFrame=requestAnimationFrame(frame);
- };playAnimFrame=requestAnimationFrame(frame);toast('Players and ball movement running');
+  paths.forEach(({player,path})=>drawMarker(ctx,at(path,progress),String(player),'#07558a',c));
+  if(passPath){
+   const ballProgress=Math.max(0,Math.min(1,(progress-.08)/.82));
+   drawBall(ctx,at(passPath,ballProgress),c);
+  }else{
+   const ballStart=playStrokes.find(st=>st.tool==='ball');
+   if(ballStart)drawBall(ctx,ballStart.points[0],c);
+  }
+  if(progress<1)playAnimFrame=requestAnimationFrame(frame);
+  else playAnimFrame=null;
+ };
+ playAnimFrame=requestAnimationFrame(frame);
+ toast('Players follow their exact drawn routes');
 }
 function drawMarker(ctx,pos,label,color,c){const px=pos.x*c.width,py=pos.y*c.height;ctx.beginPath();ctx.arc(px,py,23,0,Math.PI*2);ctx.fillStyle=color;ctx.fill();ctx.lineWidth=3;ctx.strokeStyle='#fff';ctx.stroke();ctx.fillStyle='#fff';ctx.font='bold 23px system-ui';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(label,px,py)}
 function drawBall(ctx,pos,c){const px=pos.x*c.width,py=pos.y*c.height;ctx.beginPath();ctx.arc(px,py,12,0,Math.PI*2);ctx.fillStyle='#f97316';ctx.fill();ctx.lineWidth=2;ctx.strokeStyle='#7c2d12';ctx.stroke();ctx.beginPath();ctx.moveTo(px-8,py);ctx.lineTo(px+8,py);ctx.moveTo(px,py-8);ctx.lineTo(px,py+8);ctx.stroke()}
@@ -475,6 +542,46 @@ async function sharePlay(){
   else{const a=document.createElement('a');a.href=url;a.download='basketball-play.png';a.click();toast('Play diagram downloaded')}
  }catch(e){if(e.name!=='AbortError')toast('Sharing unavailable; use Print to save a copy')}
 }
+
+let teamChatApp=null,teamChatDb=null,teamChatStop=null;
+async function connectTeamChat(){
+ const apiKey=document.getElementById('fbApiKey').value.trim(),authDomain=document.getElementById('fbAuthDomain').value.trim(),databaseURL=document.getElementById('fbDatabaseURL').value.trim(),projectId=document.getElementById('fbProjectId').value.trim(),appId=document.getElementById('fbAppId').value.trim();
+ if(!apiKey||!authDomain||!databaseURL||!projectId||!appId)return toast('Fill in all Firebase configuration fields');
+ try{
+  const appMod=await import('https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js');
+  const authMod=await import('https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js');
+  const dbMod=await import('https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js');
+  teamChatApp=appMod.initializeApp({apiKey,authDomain,databaseURL,projectId,appId},'basketballTeamChat');
+  const auth=authMod.getAuth(teamChatApp);teamChatDb=dbMod.getDatabase(teamChatApp);
+  await authMod.signInAnonymously(auth);
+  window.__teamChatApi={ref:dbMod.ref,onValue:dbMod.onValue,push:dbMod.push,query:dbMod.query,limitToLast:dbMod.limitToLast,orderByChild:dbMod.orderByChild};
+  localStorage.setItem('basketball_team_chat_firebase_v1',JSON.stringify({apiKey,authDomain,databaseURL,projectId,appId}));
+  document.getElementById('chatStatus').textContent='Connected. Enter your shared team code.';
+  if(document.getElementById('chatTeamCode').value.trim())listenTeamChat();
+ }catch(e){console.error(e);document.getElementById('chatStatus').textContent='Connection failed. Check Firebase settings, Anonymous Authentication and Realtime Database.';toast('Firebase connection failed')}
+}
+function listenTeamChat(){
+ const code=document.getElementById('chatTeamCode').value.trim().toUpperCase();
+ if(!teamChatDb||!code)return;
+ if(teamChatStop)teamChatStop();
+ const api=window.__teamChatApi,q=api.query(api.ref(teamChatDb,'teamChats/'+code+'/messages'),api.orderByChild('createdAt'),api.limitToLast(100));
+ teamChatStop=api.onValue(q,snap=>{
+  const box=document.getElementById('teamMessages'),items=[];snap.forEach(ch=>items.push(ch.val()));
+  box.innerHTML=items.map(m=>'<div style="padding:7px 5px;border-bottom:1px solid #e2e8f0"><b>'+esc(m.name||'Team member')+'</b><small style="float:right;color:#64748b">'+new Date(m.createdAt||Date.now()).toLocaleString()+'</small><div style="white-space:pre-wrap;overflow-wrap:anywhere">'+esc(m.text||'')+'</div></div>').join('');
+  box.scrollTop=box.scrollHeight;
+ });
+ document.getElementById('chatStatus').textContent='Connected to team: '+code;
+}
+async function sendTeamMessage(){
+ if(!teamChatDb)return toast('Connect Firebase first');
+ const code=document.getElementById('chatTeamCode').value.trim().toUpperCase(),name=document.getElementById('chatDisplayName').value.trim(),input=document.getElementById('teamMessageInput'),msg=input.value.trim();
+ if(!code||!name||!msg)return toast('Enter your name, team code and a message');
+ try{const api=window.__teamChatApi;await api.push(api.ref(teamChatDb,'teamChats/'+code+'/messages'),{name,text:msg,createdAt:Date.now()});input.value=''}
+ catch(e){toast('Message not sent. Check database rules and connection.')}
+}
+document.getElementById('chatTeamCode')?.addEventListener('change',()=>{if(teamChatDb)listenTeamChat()});
+try{const cfg=JSON.parse(localStorage.getItem('basketball_team_chat_firebase_v1')||'null');if(cfg){document.getElementById('fbApiKey').value=cfg.apiKey||'';document.getElementById('fbAuthDomain').value=cfg.authDomain||'';document.getElementById('fbDatabaseURL').value=cfg.databaseURL||'';document.getElementById('fbProjectId').value=cfg.projectId||'';document.getElementById('fbAppId').value=cfg.appId||''}}catch(_){}
+
 function initPlays(){try{const v=JSON.parse(localStorage.getItem(PLAYS_KEY)||'[]');playSaved=Array.isArray(v)?v:[]}catch(_){playSaved=[]}setupPlayCanvas();renderPresetSelect();renderSavedPlays()}
 
 function render(){document.getElementById('opponent').value=live.opponent||'';document.getElementById('date').value=live.date||today();document.getElementById('notes').value=live.notes||'';document.getElementById('q').textContent='Q'+live.q;document.getElementById('score').textContent=Number(live.score)||0;renderPlayersBar();displaySelected();updateGameClock();renderTable();renderPlayersPage();season();games()}
