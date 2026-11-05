@@ -122,7 +122,7 @@ input,select,textarea{width:100%;min-width:0;border:1px solid #d1d9e0;border-rad
 <section id="teamChat" class="hidden">
  <div class="card">
   <h2>💬 Team Chat</h2>
-  <p class="playHint">Connect Firebase to test shared team messaging. Important: this version does not include coach approval or secure invitation management, so do not use it for confidential or youth-team communications until membership is enforced in Firebase rules.</p>
+  <p class="playHint">Connect the app to a shared Firebase Realtime Database to message teammates and coaches across devices. Until configured, messages are not sent to anyone else.</p>
   <div class="playTools">
    <div><label>Your display name</label><input id="chatDisplayName" maxlength="32" placeholder="e.g. Coach Alex"></div>
    <div><label>Team code</label><input id="chatTeamCode" maxlength="32" placeholder="e.g. U16-BLUE"></div>
@@ -136,20 +136,17 @@ input,select,textarea{width:100%;min-width:0;border:1px solid #d1d9e0;border-rad
    <label>Firebase Project ID</label><input id="fbProjectId" placeholder="your-project-id">
    <label>Firebase App ID</label><input id="fbAppId" placeholder="1:...:web:...">
    <button class="blue full" style="margin-top:8px" onclick="connectTeamChat()">Connect Firebase</button>
-   <p class="playHint"><b>Do not use open rules for a real team.</b> The demo currently signs users in anonymously and uses a team code only as a room name; a team code is not a password or membership check. A secure release needs coach-controlled member approval plus Firebase rules that check each authenticated UID against a server/admin-created membership record. That approval workflow is not implemented in this file.</p>
-   <pre style="white-space:pre-wrap;overflow-wrap:anywhere;background:#f1f5f9;padding:10px;border-radius:8px;font-size:11px">// Membership-gated rule pattern (requires trusted admin provisioning):
-{
+   <pre style="white-space:pre-wrap;overflow-wrap:anywhere;background:#f1f5f9;padding:10px;border-radius:8px;font-size:11px">{
   "rules": {
     "teamChats": {
       "$team": {
-        ".read": "auth != null &amp;&amp; root.child('teamMembers').child($team).child(auth.uid).val() == true",
-        ".write": "auth != null &amp;&amp; root.child('teamMembers').child($team).child(auth.uid).val() == true"
+        ".read": "auth != null",
+        ".write": "auth != null"
       }
-    },
-    "teamMembers": { ".read": false, ".write": false }
+    }
   }
 }</pre>
-   <p class="playHint">Have a trusted server or Firebase Admin SDK create membership records. Do not let the app itself write its own membership flag.</p>
+   <p class="playHint">These basic rules allow any authenticated user of this Firebase project to read/write team chats. For a private team, use stricter membership-based rules before sharing it widely.</p>
   </details>
   <div id="chatStatus" class="playHint" style="padding:9px;background:#f1f5f9;border-radius:8px">Not connected — configure Firebase to enable shared messaging.</div>
   <div id="teamMessages" style="height:300px;overflow-y:auto;border:1px solid #d1d5db;border-radius:9px;padding:9px;margin:10px 0;background:#f8fafc"></div>
@@ -349,24 +346,31 @@ const PRESET_PLAYS={
 ]};
 function courtBase(){
  const c=document.getElementById('playCanvas');if(!c)return;
- const x=c.getContext('2d'),w=c.width,h=c.height;
- x.clearRect(0,0,w,h);x.fillStyle='#e8f0e5';x.fillRect(0,0,w,h);
- x.strokeStyle='#9bad99';x.lineWidth=5;
- // Half-court: baseline and sidelines, with the basket at the right end.
- x.beginPath();x.moveTo(18,18);x.lineTo(w-18,18);x.lineTo(w-18,h-18);x.lineTo(18,h-18);x.stroke();
- x.lineWidth=3;
- // Three-point arc and lane.
- x.strokeRect(w-250,h/2-115,232,230);
- x.beginPath();x.arc(w-250,h/2,115,-Math.PI/2,Math.PI/2);x.stroke();
- // Restricted area, rim, backboard and free-throw circle.
- x.beginPath();x.arc(w-78,h/2,58,Math.PI/2,Math.PI*1.5);x.stroke();
- x.beginPath();x.arc(w-78,h/2,13,0,Math.PI*2);x.stroke();
- x.beginPath();x.moveTo(w-42,h/2-70);x.lineTo(w-42,h/2+70);x.stroke();
- x.beginPath();x.arc(w-250,h/2,78,Math.PI/2,Math.PI*1.5);x.stroke();
- // Centre of the half court is shown as the left boundary.
- x.beginPath();x.moveTo(18,18);x.lineTo(18,h-18);x.stroke();
- x.fillStyle='#64748b';x.font='bold 17px system-ui';x.textAlign='center';
- x.fillText('OFFENSE →',w/2,h-30);
+ const ctx=c.getContext('2d'),w=c.width,h=c.height,cx=w*.84,cy=h*.5;
+ ctx.clearRect(0,0,w,h);ctx.fillStyle='#e8f0e5';ctx.fillRect(0,0,w,h);
+ ctx.strokeStyle='#91a58f';ctx.lineWidth=4;ctx.lineCap='round';ctx.lineJoin='round';
+ // Correct half-court: left side is open court; right edge is the attacking baseline.
+ ctx.strokeRect(28,24,w-56,h-48);
+ // Baseline and sidelines
+ ctx.lineWidth=5;ctx.beginPath();ctx.moveTo(w-28,24);ctx.lineTo(w-28,h-24);ctx.stroke();
+ // Painted lane / key and free-throw line
+ const laneLeft=w*.655,laneTop=h*.315,laneBottom=h*.685;
+ ctx.lineWidth=3;ctx.strokeRect(laneLeft,laneTop,w-28-laneLeft,laneBottom-laneTop);
+ // Free-throw circle: solid court-side half, dashed lane-side half
+ ctx.beginPath();ctx.arc(laneLeft,cy,(laneBottom-laneTop)/2,-Math.PI/2,Math.PI/2);ctx.stroke();
+ ctx.setLineDash([9,8]);ctx.beginPath();ctx.arc(laneLeft,cy,(laneBottom-laneTop)/2,Math.PI/2,Math.PI*1.5);ctx.stroke();ctx.setLineDash([]);
+ // Three-point line: broad arc clipped to the baseline corners
+ const radius=h*.72,topY=cy-Math.sqrt(radius*radius-Math.pow(w-28-cx,2));
+ const bottomY=cy+Math.sqrt(radius*radius-Math.pow(w-28-cx,2));
+ ctx.beginPath();ctx.moveTo(w-28,topY);ctx.lineTo(w-28,topY);
+ ctx.arc(cx,cy,radius,Math.PI+Math.asin((cy-topY)/radius),Math.PI*2-Math.asin((bottomY-cy)/radius),false);ctx.stroke();
+ // Corner three-point segments
+ ctx.beginPath();ctx.moveTo(w-28,topY);ctx.lineTo(w-28,topY);ctx.moveTo(w-28,bottomY);ctx.lineTo(w-28,bottomY);ctx.stroke();
+ // Hoop, backboard and restricted area
+ ctx.strokeStyle='#829681';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(w-65,cy-43);ctx.lineTo(w-65,cy+43);ctx.stroke();
+ ctx.beginPath();ctx.arc(w-105,cy,12,0,Math.PI*2);ctx.stroke();
+ ctx.beginPath();ctx.arc(w-105,cy,48,Math.PI/2,Math.PI*1.5);ctx.stroke();
+ ctx.fillStyle='#64748b';ctx.font='bold 16px system-ui';ctx.textAlign='center';ctx.fillText('ATTACKING BASKET  →',w*.5,h-8);
 }
 function drawPlay(options={}){
  const c=document.getElementById('playCanvas');if(!c)return;courtBase();const x=c.getContext('2d');
@@ -474,18 +478,18 @@ function presetStrokes(code){
   defForm.forEach((pt,i)=>out.push(marker(i+1,pt[0],pt[1],'defense')));
  }
  // Player-specific routes: each route is attached to its numbered player, not an unrelated moving dot.
- const path=routes[code]||routes.motion;
  const routePlayers=code==='pnr'?[1,2]:code==='givego'?[1,2]:code==='ucla'?[1,2]:code==='floppy'?[2,4]:code==='box'?[1,2]:code==='flex'?[1,2]:code==='baselinebox'?[1,2,5]:code==='stack'?[1,2,3]:code==='sidelinebox'?[1,2]:code==='zipper'?[1,4]:code==='horns'?[1,2,3]:[1,2,3];
- routePlayers.forEach((n,i)=>{
-  const start=form[n-1],pts=path.map(q=>[q[0],q[1]]);
-  pts[0]=[start[0],start[1]];
+ // Each player gets an individual route. No player is sent along another player's path.
+ const targets={1:[[.52,.50],[.63,.40],[.73,.50]],2:[[.48,.28],[.60,.24],[.70,.34]],3:[[.50,.72],[.62,.72],[.76,.62]],4:[[.35,.18],[.48,.20],[.58,.30]],5:[[.35,.82],[.48,.80],[.60,.68]]};
+ routePlayers.forEach(n=>{
+  const st=form[n-1],dest=targets[n]||targets[3];
+  const pts=[[st[0],st[1]],...dest];
   out.push(route(n,pts,'offense'));
  });
- // Ball starts with point guard (#1), shown as a basketball beside the player.
- out.push({tool:'ball',player:1,points:[{x:form[0][0]+.035,y:form[0][1]}]});
- // A pass route moves the ball from the point guard to the first receiver, then toward the attack.
- const receiver=form[1]||form[0];
- out.push({tool:'pass',player:1,color:'#16a34a',points:[{x:form[0][0]+.035,y:form[0][1]},{x:receiver[0]+.035,y:receiver[1]},{x:.72,y:.50}]});
+ // Ball begins with #1. The green pass line is a real pass to #2's starting position.
+ const handler=form[0],receiver=form[1]||form[0];
+ out.push({tool:'ball',player:1,points:[{x:handler[0]+.035,y:handler[1]}]});
+ out.push({tool:'pass',player:1,receiver:2,color:'#16a34a',points:[{x:handler[0]+.035,y:handler[1]},{x:receiver[0]+.035,y:receiver[1]}]});
  return out;
 }
 function loadPresetPlay(){stopPlayAnimation();const cat=document.getElementById('playCategory').value,idx=Number(document.getElementById('playPreset').value)||0,p=PRESET_PLAYS[cat][idx];if(!p)return;playStrokes=presetStrokes(p[2]);document.getElementById('customPlayName').value=p[0];document.getElementById('customPlayNotes').value=p[1];document.getElementById('presetDescription').textContent=p[1];const v=document.getElementById('presetVideoLink');if(v){v.href='https://www.youtube.com/results?search_query='+encodeURIComponent('basketball '+p[0]+' play demonstration coaching');v.textContent='▶ Watch a video demonstration: '+p[0]}drawPlay()}
@@ -499,34 +503,28 @@ function savePlayVariation(){
 }
 function stopPlayAnimation(){if(playAnimFrame)cancelAnimationFrame(playAnimFrame);playAnimFrame=null;drawPlay()}
 function animatePlay(){
- stopPlayAnimation();
- const c=document.getElementById('playCanvas');if(!c)return;
- const playerRoutes=playStrokes.filter(st=>st.player&&st.tool==='arrow'&&st.points&&st.points.length>1);
- const passStroke=playStrokes.find(st=>st.tool==='pass'&&st.points&&st.points.length>1);
- const ballStart=playStrokes.find(st=>st.tool==='ball');
- if(!playerRoutes.length&&!passStroke)return toast('Load a preset or draw player routes and a pass first');
- const makePath=st=>{let total=0;const segments=[];for(let i=1;i<st.points.length;i++){const a=st.points[i-1],b=st.points[i],len=Math.hypot((b.x-a.x)*c.width,(b.y-a.y)*c.height);segments.push({a,b,len});total+=len;}return{segments,total};};
- const at=(path,t)=>{if(!path||!path.total)return path?.segments?.[0]?.a||{x:.5,y:.5};let d=Math.max(0,Math.min(1,t))*path.total;for(let i=0;i<path.segments.length;i++){const q=path.segments[i];if(d<=q.len||i===path.segments.length-1){const f=q.len?Math.min(1,d/q.len):0;return{x:q.a.x+(q.b.x-q.a.x)*f,y:q.a.y+(q.b.y-q.a.y)*f};}d-=q.len;}return path.segments[path.segments.length-1].b;};
- const paths=playerRoutes.map(st=>({player:Number(st.player),path:makePath(st)}));
- const initial=ballStart?.points?.[0]||playStrokes.find(st=>st.tool==='offense1')?.points?.[0]||{x:.25,y:.5};
- const passPoints=passStroke?.points||[];
- const passPath=passPoints.length>1?makePath({points:passPoints}):null;
- const receiverRoute=paths.find(p=>p.player===2);
- const receiverStart=playStrokes.find(st=>st.tool==='offense2')?.points?.[0]||receiverRoute?.path.segments?.[0]?.a||passPoints[passPoints.length-1]||initial;
- const duration=7000,passStart=.38,passEnd=.62;playAnimStart=performance.now();
- const frame=now=>{
-  const progress=Math.min(1,(now-playAnimStart)/duration);drawPlay({hideMarkers:true,hideBall:true});const ctx=c.getContext('2d');
+ stopPlayAnimation();const c=document.getElementById('playCanvas');if(!c)return;
+ const routeStrokes=playStrokes.filter(st=>st.player&&st.tool==='arrow'&&st.points&&st.points.length>1);
+ const pass=playStrokes.find(st=>st.tool==='pass'&&st.points&&st.points.length>1);
+ if(!routeStrokes.length&&!pass)return toast('Add player routes and a pass before animating');
+ const pathFor=st=>{const pts=st.points;let lengths=[],total=0;for(let i=1;i<pts.length;i++){const d=Math.hypot((pts[i].x-pts[i-1].x)*c.width,(pts[i].y-pts[i-1].y)*c.height);lengths.push(d);total+=d}return{pts,lengths,total}};
+ const paths=routeStrokes.map(st=>({player:Number(st.player),path:pathFor(st)}));
+ const pointAt=(path,t)=>{if(!path||!path.total)return path?.pts?.[0]||{x:.5,y:.5};let d=Math.max(0,Math.min(1,t))*path.total;for(let i=0;i<path.lengths.length;i++){const len=path.lengths[i];if(d<=len||i===path.lengths.length-1){const a=path.pts[i],b=path.pts[i+1],f=len?Math.min(1,d/len):0;return{x:a.x+(b.x-a.x)*f,y:a.y+(b.y-a.y)*f}}d-=len}return path.pts[path.pts.length-1]};
+ const byPlayer=n=>paths.find(x=>x.player===n)?.path;
+ const ballStart=playStrokes.find(st=>st.tool==='ball')?.points?.[0]||byPlayer(1)?.pts?.[0]||{x:.25,y:.5};
+ const passFrom=pass?.points?.[0]||ballStart,passTo=pass?.points?.[pass.points.length-1]||ballStart;
+ const duration=6500;playAnimStart=performance.now();
+ const frame=now=>{const t=Math.min(1,(now-playAnimStart)/duration);drawPlay({hideMarkers:true,hideBall:true});const ctx=c.getContext('2d');
   playStrokes.filter(st=>/^defense[1-5]$/.test(st.tool)).forEach(st=>drawMarker(ctx,st.points[0],st.tool.slice(-1),'#dc2626',c));
-  const positions={};paths.forEach(({player,path})=>{positions[player]=at(path,progress);drawMarker(ctx,positions[player],String(player),'#07558a',c);});
-  // Ball stays beside #1 until the pass begins, travels along the drawn pass, then stays beside #2.
-  let ballPos=positions[1]||initial;
-  if(progress>=passStart&&progress<=passEnd&&passPath){ballPos=at(passPath,(progress-passStart)/(passEnd-passStart));}
-  else if(progress>passEnd){ballPos=positions[2]||receiverStart;}
-  if(!positions[1]&&progress<passStart)ballPos=initial;
-  drawBall(ctx,{x:Math.min(.97,ballPos.x+.035),y:ballPos.y},c);
-  if(progress<1)playAnimFrame=requestAnimationFrame(frame);else playAnimFrame=null;
- };
- playAnimFrame=requestAnimationFrame(frame);toast('Animation: ball stays with the handler, then passes to #2');
+  const positions={};paths.forEach(({player,path})=>{positions[player]=pointAt(path,t);drawMarker(ctx,positions[player],String(player),'#07558a',c)});
+  // The ball is carried by #1, visibly travels to #2, then stays beside #2.
+  const carrier=positions[1]||ballStart,receiver=positions[2]||passTo;let ballPos;
+  if(t<.48)ballPos={x:carrier.x+.025,y:carrier.y-.018};
+  else if(t<.66){const f=(t-.48)/.18;ballPos={x:passFrom.x+(passTo.x-passFrom.x)*f,y:passFrom.y+(passTo.y-passFrom.y)*f}}
+  else ballPos={x:receiver.x+.025,y:receiver.y-.018};
+  drawBall(ctx,ballPos,c);
+  if(t<1)playAnimFrame=requestAnimationFrame(frame);else playAnimFrame=null;
+ };playAnimFrame=requestAnimationFrame(frame);toast('Players follow separate routes; ball passes from #1 to #2');
 }
 function drawMarker(ctx,pos,label,color,c){const px=pos.x*c.width,py=pos.y*c.height;ctx.beginPath();ctx.arc(px,py,23,0,Math.PI*2);ctx.fillStyle=color;ctx.fill();ctx.lineWidth=3;ctx.strokeStyle='#fff';ctx.stroke();ctx.fillStyle='#fff';ctx.font='bold 23px system-ui';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(label,px,py)}
 function drawBall(ctx,pos,c){const px=pos.x*c.width,py=pos.y*c.height;ctx.beginPath();ctx.arc(px,py,12,0,Math.PI*2);ctx.fillStyle='#f97316';ctx.fill();ctx.lineWidth=2;ctx.strokeStyle='#7c2d12';ctx.stroke();ctx.beginPath();ctx.moveTo(px-8,py);ctx.lineTo(px+8,py);ctx.moveTo(px,py-8);ctx.lineTo(px,py+8);ctx.stroke()}
