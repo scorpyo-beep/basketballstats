@@ -103,16 +103,16 @@ input,select,textarea{width:100%;min-width:0;border:1px solid #d1d9e0;border-rad
 </section>
 
 <section id="plays" class="hidden">
- <div class="card"><h2>📋 Coaches Court Pad</h2><p class="playHint">Scaled half-court diagram with the basket at the top. Choose a preset to load its starting formation, then animate the coordinated player cuts, screens and timed passes.</p>
+ <div class="card"><h2>📋 Coaches Court Pad</h2><p class="playHint">The Plays page opens on a blank editable court. Choose a preset to view and animate it; presets are read-only.</p>
  <div class="playLayout"><div>
   <div class="courtWrap"><canvas id="playCanvas" class="courtCanvas" width="700" height="660" aria-label="Scaled basketball half-court drawing pad"></canvas>
 <div style="display:flex;gap:12px;flex-wrap:wrap;font-size:12px;margin:6px 0 10px;color:#475569"><span>🔵 Offense 1–5</span><span>🔴 Defense 1–5</span><span>🟠 Ball</span><span>🟢 Pass path</span><span>🟡 Player route</span></div></div>
-  <div class="playBtns"><button class="blue" onclick="setPlayTool('draw')">✏️ Draw</button><button class="blue" onclick="setPlayTool('arrow')">➡ Arrow</button><button class="orange" onclick="setPlayTool('erase')">⌫ Erase</button><button onclick="undoPlayStroke()">↶ Undo</button><button onclick="clearPlayCourt()" class="red">Clear Court</button><button class="green" onclick="saveCustomPlay()">💾 Save Play</button></div>
+  <div class="playBtns"><button class="green" onclick="startCustomPlay()">＋ New Custom Board</button><button class="blue" onclick="setPlayTool('draw')">✏️ Draw</button><button class="blue" onclick="setPlayTool('arrow')">➡ Arrow</button><button class="orange" onclick="setPlayTool('erase')">⌫ Erase</button><button onclick="undoPlayStroke()">↶ Undo</button><button onclick="clearPlayCourt()" class="red">Clear Court</button><button class="green" onclick="saveCustomPlay()">💾 Save Play</button></div>
   <div class="playBtns" style="margin-top:6px"><label style="font-size:11px">Player marker <select id="playMarkerNumber"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option></select></label><button class="blue" onclick="setPlayTool('move')">✋ Move Players</button><button class="blue" onclick="setPlayTool('offense')">🔵 Add Offense</button><button class="orange" onclick="setPlayTool('defense')">🔴 Add Defense</button><button class="green" onclick="animatePlay()">▶ Animate</button><button onclick="stopPlayAnimation()">■ Stop</button><button onclick="savePlayVariation()">＋ Save Variation</button><button onclick="printPlay()">🖨 Print</button><button onclick="sharePlay()">↗ Share</button></div>
   <div class="playTools" style="margin-top:8px"><div><label>Play name</label><input id="customPlayName" placeholder="e.g. Baseline quick hitter"></div><div><label>Line colour</label><select id="playColor"><option value="#dc2626">Red</option><option value="#07558a">Blue</option><option value="#16a34a">Green</option><option value="#7c3aed">Purple</option><option value="#111827">Black</option></select></div><div class="wide"><label>Coach notes (optional)</label><input id="customPlayNotes" placeholder="Timing, player roles, reads..."></div></div>
  </div><div>
   <h3>Preset Playbook</h3><div class="playTools"><div><label>Category</label><select id="playCategory" onchange="renderPresetSelect()"><option>Offensive</option><option>Defensive</option><option>Inbounds</option><option>Press Break</option><option>Late Game</option></select></div><div><label>Preset play</label><select id="playPreset" onchange="loadPresetPlay()"></select></div></div>
-  <p class="playHint">Choose a category and play to load its diagram onto the court. You can then draw over it, add arrows, or save your variation.</p>
+  <p class="playHint">Choose a category and preset to view and animate a read-only play. Use New Custom Board to return to a blank, editable court.</p>
   <div id="presetDescription" class="playHint" style="padding:8px;background:#f1f5f9;border-radius:8px;margin:7px 0"></div>
   <a id="presetVideoLink" href="https://www.youtube.com/results?search_query=basketball+play+demonstration" target="_blank" rel="noopener" style="display:block;text-align:center;margin:8px 0;padding:10px;background:#07558a;color:white;border-radius:8px;text-decoration:none;font-weight:700">▶ Watch a video demonstration of this play</a>
   <h3 style="margin-top:12px">My Saved Plays</h3><div id="savedPlays" class="playList"></div><p id="noSavedPlays" class="playHint">Your saved plays will appear here.</p>
@@ -284,7 +284,7 @@ function clearCardStickers(){cardStickers=[];activeStickerId=null;renderPlacedSt
 function drawCardStickers(ctx){const iconsOnly=!!document.getElementById('stickerIconsOnly')?.checked;cardStickers.forEach(st=>{const x=st.x*900,y=st.y*1200,sz=Number(st.size||1);ctx.save();ctx.translate(x,y);ctx.scale(sz,sz);ctx.textAlign='center';ctx.textBaseline='middle';ctx.shadowColor='#000b';ctx.shadowBlur=8;ctx.font='64px system-ui';ctx.fillText(st.emoji,0,iconsOnly?0:-12);ctx.shadowBlur=0;if(!iconsOnly){ctx.font='1000 22px system-ui';ctx.lineWidth=4;ctx.strokeStyle='#000b';ctx.strokeText(st.label,0,35);ctx.fillStyle='#fff';ctx.fillText(st.label,0,35)}if(st.id===activeStickerId){ctx.setLineDash([6,5]);ctx.strokeStyle='#ffffff';ctx.lineWidth=2;ctx.strokeRect(-43,-47,86,96)}ctx.restore()})}
 function stickerAt(pt){const iconsOnly=!!document.getElementById('stickerIconsOnly')?.checked;for(let i=cardStickers.length-1;i>=0;i--){const st=cardStickers[i],sz=Number(st.size||1),halfW=Math.max(58,iconsOnly?48:Math.max(58,(String(st.label||'').length*7))),halfH=iconsOnly?52:68;if(Math.abs(pt.x-st.x*900)<halfW*sz&&Math.abs(pt.y-st.y*1200)<halfH*sz)return st}return null}
 function canvasPoint(e){const c=document.getElementById('cardCanvas');const r=c.getBoundingClientRect();return{x:(e.clientX-r.left)*(c.width/Math.max(1,r.width)),y:(e.clientY-r.top)*(c.height/Math.max(1,r.height))}}
-function attachCardGestures(){const c=document.getElementById('cardCanvas');if(!c||c.dataset.gesturesAttached)return;c.dataset.gesturesAttached='1';c.addEventListener('pointerdown',e=>{e.preventDefault();c.setPointerCapture?.(e.pointerId);gesturePointers.set(e.pointerId,{x:e.clientX,y:e.clientY,pt:canvasPoint(e)});gestureMoved=false;if(gesturePointers.size===1){const pt=canvasPoint(e),st=cardSide==='front'?stickerAt(pt):null;activeStickerId=st?st.id:null;if(st){const ss=document.getElementById('stickerSize');if(ss)ss.value=String(st.size||1);const sv=document.getElementById('stickerSizeVal');if(sv)sv.textContent=Number(st.size||1).toFixed(2)+'×'}gestureStart={x:e.clientX,y:e.clientY,pt,mode:st?'sticker':'photo',stickerId:st?.id||null,crop:cropValues()};if(st)generateCard();}else if(gesturePointers.size===2){const a=[...gesturePointers.values()];pinchStart={distance:Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y),zoom:cropValues().zoom};gestureStart=null;}},{passive:false});c.addEventListener('pointermove',e=>{if(!gesturePointers.has(e.pointerId))return;e.preventDefault();const prev=gesturePointers.get(e.pointerId);gesturePointers.set(e.pointerId,{x:e.clientX,y:e.clientY,pt:canvasPoint(e)});if(gesturePointers.size>=2){const a=[...gesturePointers.values()];if(!pinchStart){pinchStart={distance:Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y),zoom:cropValues().zoom};return}const d=Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y);if(Math.abs(d-pinchStart.distance)>2){gestureMoved=true;const input=document.getElementById('cropZoom');input.value=String(Math.max(1,Math.min(3.5,pinchStart.zoom*d/Math.max(1,pinchStart.distance))));updateCrop()}return}if(!gestureStart)return;const dx=e.clientX-gestureStart.x,dy=e.clientY-gestureStart.y;if(Math.abs(dx)+Math.abs(dy)>3)gestureMoved=true;if(!gestureMoved)return;if(gestureStart.mode==='sticker'){const st=cardStickers.find(x=>x.id===gestureStart.stickerId);if(st){const pt=canvasPoint(e);st.x=Math.max(.035,Math.min(.965,pt.x/900));st.y=Math.max(.035,Math.min(.965,pt.y/1200));scheduleCardPreview()}}else if(cardSide==='front'&&cardPhotoImage){const r=c.getBoundingClientRect();const z=cropValues();const maxX=Math.max(.12,1-1/z.zoom),maxY=Math.max(.12,1-1/z.zoom);document.getElementById('cropX').value=String(Math.max(-1,Math.min(1,gestureStart.crop.x-dx/r.width*0.10/maxX)));document.getElementById('cropY').value=String(Math.max(-1,Math.min(1,gestureStart.crop.y-dy/r.height*0.10/maxY)));updateCrop()}},{passive:false});const end=e=>{if(gesturePointers.has(e.pointerId))gesturePointers.delete(e.pointerId);if(gesturePointers.size<2)pinchStart=null;if(gesturePointers.size===0){if(gestureStart&&!gestureMoved){if(cardSide==='front'){const st=stickerAt(gestureStart.pt);if(st){activeStickerId=st.id;generateCard()}else toggleCardSide()}else toggleCardSide()}else{renderPlacedStickers();scheduleCardPreview()}gestureStart=null;setTimeout(()=>{gestureMoved=false},80)}};c.addEventListener('pointerup',end);c.addEventListener('pointercancel',end);c.addEventListener('lostpointercapture',end)}
+function attachCardGestures(){const c=document.getElementById('cardCanvas');if(!c||c.dataset.gesturesAttached)return;c.dataset.gesturesAttached='1';c.addEventListener('pointerdown',e=>{if(presetReadOnly){toast('Preset is view-only. Start a new custom board to draw.');return}e.preventDefault();c.setPointerCapture?.(e.pointerId);gesturePointers.set(e.pointerId,{x:e.clientX,y:e.clientY,pt:canvasPoint(e)});gestureMoved=false;if(gesturePointers.size===1){const pt=canvasPoint(e),st=cardSide==='front'?stickerAt(pt):null;activeStickerId=st?st.id:null;if(st){const ss=document.getElementById('stickerSize');if(ss)ss.value=String(st.size||1);const sv=document.getElementById('stickerSizeVal');if(sv)sv.textContent=Number(st.size||1).toFixed(2)+'×'}gestureStart={x:e.clientX,y:e.clientY,pt,mode:st?'sticker':'photo',stickerId:st?.id||null,crop:cropValues()};if(st)generateCard();}else if(gesturePointers.size===2){const a=[...gesturePointers.values()];pinchStart={distance:Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y),zoom:cropValues().zoom};gestureStart=null;}},{passive:false});c.addEventListener('pointermove',e=>{if(!gesturePointers.has(e.pointerId))return;e.preventDefault();const prev=gesturePointers.get(e.pointerId);gesturePointers.set(e.pointerId,{x:e.clientX,y:e.clientY,pt:canvasPoint(e)});if(gesturePointers.size>=2){const a=[...gesturePointers.values()];if(!pinchStart){pinchStart={distance:Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y),zoom:cropValues().zoom};return}const d=Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y);if(Math.abs(d-pinchStart.distance)>2){gestureMoved=true;const input=document.getElementById('cropZoom');input.value=String(Math.max(1,Math.min(3.5,pinchStart.zoom*d/Math.max(1,pinchStart.distance))));updateCrop()}return}if(!gestureStart)return;const dx=e.clientX-gestureStart.x,dy=e.clientY-gestureStart.y;if(Math.abs(dx)+Math.abs(dy)>3)gestureMoved=true;if(!gestureMoved)return;if(gestureStart.mode==='sticker'){const st=cardStickers.find(x=>x.id===gestureStart.stickerId);if(st){const pt=canvasPoint(e);st.x=Math.max(.035,Math.min(.965,pt.x/900));st.y=Math.max(.035,Math.min(.965,pt.y/1200));scheduleCardPreview()}}else if(cardSide==='front'&&cardPhotoImage){const r=c.getBoundingClientRect();const z=cropValues();const maxX=Math.max(.12,1-1/z.zoom),maxY=Math.max(.12,1-1/z.zoom);document.getElementById('cropX').value=String(Math.max(-1,Math.min(1,gestureStart.crop.x-dx/r.width*0.10/maxX)));document.getElementById('cropY').value=String(Math.max(-1,Math.min(1,gestureStart.crop.y-dy/r.height*0.10/maxY)));updateCrop()}},{passive:false});const end=e=>{if(gesturePointers.has(e.pointerId))gesturePointers.delete(e.pointerId);if(gesturePointers.size<2)pinchStart=null;if(gesturePointers.size===0){if(gestureStart&&!gestureMoved){if(cardSide==='front'){const st=stickerAt(gestureStart.pt);if(st){activeStickerId=st.id;generateCard()}else toggleCardSide()}else toggleCardSide()}else{renderPlacedStickers();scheduleCardPreview()}gestureStart=null;setTimeout(()=>{gestureMoved=false},80)}};c.addEventListener('pointerup',end);c.addEventListener('pointercancel',end);c.addEventListener('lostpointercapture',end)}
 function drawCardBack(ctx,p,primary,dark,accent){const W=900,H=1200;const bg=ctx.createLinearGradient(W,0,0,H);bg.addColorStop(0,dark);bg.addColorStop(1,primary);ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);ctx.strokeStyle=accent;ctx.lineWidth=14;ctx.strokeRect(22,22,W-44,H-44);ctx.strokeStyle='#ffffff55';ctx.lineWidth=3;ctx.strokeRect(42,42,W-84,H-84);
  ctx.textAlign='center';ctx.fillStyle=accent;ctx.font='900 30px system-ui';ctx.fillText('PLAYER PROFILE',450,100);ctx.fillStyle='#fff';ctx.font='900 48px system-ui';ctx.fillText((p?.name||'PLAYER NAME').toUpperCase().slice(0,25),450,165);ctx.font='800 28px system-ui';ctx.fillStyle=accent;ctx.fillText('#'+String(p?.num||'00')+'  •  '+String(p?.team||'TEAM').toUpperCase().slice(0,24),450,215);
  ctx.fillStyle='#ffffff18';ctx.fillRect(75,260,750,140);ctx.fillStyle=accent;ctx.font='900 23px system-ui';ctx.fillText('PLAYER RATING',450,300);ctx.fillStyle='#fbbf24';ctx.font='900 58px system-ui';ctx.fillText('★ '.repeat(cardStars).trim(),450,365);ctx.fillStyle='#fff';ctx.font='700 19px system-ui';ctx.fillText(cardStars+' OUT OF 5 STARS',450,390);
@@ -307,7 +307,7 @@ function syncInputs(){live.opponent=document.getElementById('opponent').value;li
 
 // Coaches Play Pad — stored separately so player/game data is never changed.
 const PLAYS_KEY='basketball_plays_samsung_v1';
-let playTool='draw',playStrokes=[],playPointer=null,playSaved=[],playAnimFrame=null,playAnimStart=0;
+let playTool='draw',playStrokes=[],playPointer=null,playSaved=[],playAnimFrame=null,playAnimStart=0,presetReadOnly=false;
 const PRESET_PLAYS={
 'Offensive':[
  ['5-Out Motion','Space five players around the arc; pass, cut hard, and fill the open spot.','motion'],
@@ -317,7 +317,12 @@ const PRESET_PLAYS={
  ['UCLA Cut','Wing entry pass triggers a baseline cut off an elbow screen.','ucla'],
  ['Floppy','Shooter uses staggered baseline screens to get open on either side.','floppy'],
  ['Box Set','Four players form a box; screen down to free a cutter near the rim.','box'],
- ['Flex Offense','Pass, basket cut, and cross-screen along the baseline.','flex']
+ ['Flex Offense','Pass, basket cut, and cross-screen along the baseline.','flex'],
+ ['Princeton Chin','Chin entry into a backdoor cut, handoff and weak-side fill.','princeton'],
+ ['Spain Pick and Roll','Back screen the roller while the handler uses the high screen.','spain'],
+ ['Horns Twist','Horns alignment with a second screen and a weak-side corner lift.','hornstwist'],
+ ['Stagger Screen','Two screeners create a staggered route for a perimeter shooter.','stagger'],
+ ['Zipper Entry','Baseline player zips up through a screen for a top catch.','zipperentry']
 ],
 'Defensive':[
  ['Man-to-Man','Each defender matches up; on-ball pressure with help-side positioning.','man'],
@@ -331,7 +336,10 @@ const PRESET_PLAYS={
  ['Baseline Box','Four players start in a box; use screens to free a rim cutter or corner shooter.','baselinebox'],
  ['Baseline Stack','Stack near the lane; first cutter clears while the next curls to the rim.','stack'],
  ['Sideline Box','Box alignment near sideline; screen the inbounder’s defender and create a safety pass.','sidelinebox'],
- ['Sideline Zipper','Player zips from low block to top using a screen for a quick catch.','zipper']
+ ['Sideline Zipper','Player zips from low block to top using a screen for a quick catch.','zipper'],
+ ['Baseline Triangle','Three players create a triangle with a quick screen-the-screener action.','baselineTriangle'],
+ ['Box Cross','Opposite low players cross and screen to free a rim cutter.','boxcross'],
+ ['Stack Slip','First player clears while the second slips directly to the basket.','stackslip']
 ],
 'Press Break':[
  ['1–4 Press Break','One inbounder and four across; flash middle and attack behind the press.','press14'],
@@ -342,7 +350,9 @@ const PRESET_PLAYS={
  ['2-for-1 Quick Hit','Create an early quality shot while leaving time for a final possession.','twoforone'],
  ['Sideline ATO','Sideline out-of-bounds action for a quick catch-and-shoot or slip.','ato'],
  ['Need a 3','Spread the floor, use a double screen, and create a three-point look.','need3'],
- ['Protect the Lead','Safe outlet spacing, strong ball-side support, and a backcourt safety.','protect']
+ ['Protect the Lead','Safe outlet spacing, strong ball-side support, and a backcourt safety.','protect'],
+ ['Horns Late Clock','A quick horns screen into a downhill drive or kick-out.','hornslate'],
+ ['Corner Clear','Clear one side for an isolation drive with two safety outlets.','cornerclear']
 ]};
 function courtBase(){
  const c=document.getElementById('playCanvas');if(!c)return;
@@ -394,24 +404,25 @@ function drawPlay(options={}){
   if((st.tool==='arrow'||st.tool==='pass'||st.tool==='screen')&&st.points.length>1){const a=st.points[st.points.length-2],b=st.points[st.points.length-1],ax=a.x*c.width,ay=a.y*c.height,bx=b.x*c.width,by=b.y*c.height,ang=Math.atan2(by-ay,bx-ax),len=25;x.beginPath();x.moveTo(bx,by);x.lineTo(bx-len*Math.cos(ang-.5),by-len*Math.sin(ang-.5));x.lineTo(bx-len*Math.cos(ang+.5),by-len*Math.sin(ang+.5));x.closePath();x.fill()}
  });
 }
-function setPlayTool(t){playTool=t;toast(({draw:'Draw routes or drag players',arrow:'Draw arrows or drag players',move:'Drag numbered players to reposition them',erase:'Erase',offense:'Tap court to place offensive player',defense:'Tap court to place defender'})[t]||'Tool selected')}
+function setPlayTool(t){if(presetReadOnly)return toast('Preset plays are view-only. Choose New Custom Board to draw.');playTool=t;toast(({draw:'Draw routes or drag players',arrow:'Draw arrows or drag players',move:'Drag numbered players to reposition them',erase:'Erase',offense:'Tap court to place offensive player',defense:'Tap court to place defender'})[t]||'Tool selected')}
 function playPos(e){const r=e.currentTarget.getBoundingClientRect();return{x:Math.max(0,Math.min(1,(e.clientX-r.left)/r.width)),y:Math.max(0,Math.min(1,(e.clientY-r.top)/r.height))}}
 function setupPlayCanvas(){
  const c=document.getElementById('playCanvas');if(!c||c.dataset.ready)return;c.dataset.ready='1';
  let dragIndex=null,isDrawing=false,rafPending=false;
  const redraw=()=>{if(rafPending)return;rafPending=true;requestAnimationFrame(()=>{rafPending=false;drawPlay()})};
  const hit=pos=>{const rect=c.getBoundingClientRect(),radius=32/Math.min(rect.width/c.width,rect.height/c.height);for(let i=playStrokes.length-1;i>=0;i--){const st=playStrokes[i];if(!/^(offense|defense)[1-5]$/.test(st.tool)||!st.points?.length)continue;const q=st.points[0];if(Math.hypot((q.x-pos.x)*c.width,(q.y-pos.y)*c.height)<=radius)return i}return -1};
- c.addEventListener('pointerdown',e=>{e.preventDefault();c.setPointerCapture(e.pointerId);const pos=playPos(e),idx=hit(pos);if(idx>=0&&(playTool==='move'||playTool==='draw'||playTool==='arrow')){dragIndex=idx;playPointer=e.pointerId;return}if(playTool==='offense'||playTool==='defense'){const n=document.getElementById('playMarkerNumber').value;playStrokes.push({tool:playTool+n,color:playTool==='offense'?'#07558a':'#dc2626',points:[pos]});drawPlay();return}playPointer=e.pointerId;isDrawing=true;playStrokes.push({tool:playTool,color:playTool==='erase'?'#e8f0e5':document.getElementById('playColor').value,points:[pos]});drawPlay()});
+ c.addEventListener('pointerdown',e=>{if(presetReadOnly){toast('Preset is view-only. Start a new custom board to draw.');return}e.preventDefault();c.setPointerCapture(e.pointerId);const pos=playPos(e),idx=hit(pos);if(idx>=0&&(playTool==='move'||playTool==='draw'||playTool==='arrow')){dragIndex=idx;playPointer=e.pointerId;return}if(playTool==='offense'||playTool==='defense'){const n=document.getElementById('playMarkerNumber').value;playStrokes.push({tool:playTool+n,color:playTool==='offense'?'#07558a':'#dc2626',points:[pos]});drawPlay();return}playPointer=e.pointerId;isDrawing=true;playStrokes.push({tool:playTool,color:playTool==='erase'?'#e8f0e5':document.getElementById('playColor').value,points:[pos]});drawPlay()});
  c.addEventListener('pointermove',e=>{if(playPointer!==e.pointerId)return;const pos=playPos(e);if(dragIndex!==null){playStrokes[dragIndex].points[0]=pos;redraw();return}if(isDrawing){playStrokes[playStrokes.length-1].points.push(pos);redraw()}});
  const end=e=>{if(playPointer===e.pointerId){playPointer=null;dragIndex=null;isDrawing=false;drawPlay()}};c.addEventListener('pointerup',end);c.addEventListener('pointercancel',end);drawPlay();
 }
-function undoPlayStroke(){playStrokes.pop();drawPlay()}
-function clearPlayCourt(){if(!confirm('Clear the court drawing?'))return;playStrokes=[];drawPlay()}
-function saveCustomPlay(){const name=document.getElementById('customPlayName').value.trim();if(!name)return toast('Enter a play name');if(!playStrokes.length)return toast('Draw or load a play first');playSaved.unshift({id:Date.now().toString(),name,category:'Custom',notes:document.getElementById('customPlayNotes').value,strokes:JSON.parse(JSON.stringify(playStrokes))});try{localStorage.setItem(PLAYS_KEY,JSON.stringify(playSaved));renderSavedPlays();toast('Play saved')}catch(e){playSaved.shift();toast('Could not save. Device storage may be full.')}}
+function undoPlayStroke(){if(presetReadOnly)return toast('Preset is view-only.');playStrokes.pop();drawPlay()}
+function clearPlayCourt(){if(presetReadOnly)return toast('Preset is view-only. Choose New Custom Board first.');if(!confirm('Clear the court drawing?'))return;playStrokes=[];drawPlay()}
+function saveCustomPlay(){if(presetReadOnly)return toast('Start a custom board before saving a custom play.');const name=document.getElementById('customPlayName').value.trim();if(!name)return toast('Enter a play name');if(!playStrokes.length)return toast('Draw or load a play first');playSaved.unshift({id:Date.now().toString(),name,category:'Custom',notes:document.getElementById('customPlayNotes').value,strokes:JSON.parse(JSON.stringify(playStrokes))});try{localStorage.setItem(PLAYS_KEY,JSON.stringify(playSaved));renderSavedPlays();toast('Play saved')}catch(e){playSaved.shift();toast('Could not save. Device storage may be full.')}}
 function loadSavedPlay(id){const p=playSaved.find(x=>x.id===id);if(!p)return;playStrokes=JSON.parse(JSON.stringify(p.strokes||[]));document.getElementById('customPlayName').value=p.name||'';document.getElementById('customPlayNotes').value=p.notes||'';drawPlay();toast('Play loaded')}
 function deleteSavedPlay(id){if(!confirm('Delete this saved play?'))return;playSaved=playSaved.filter(p=>p.id!==id);localStorage.setItem(PLAYS_KEY,JSON.stringify(playSaved));renderSavedPlays()}
 function renderSavedPlays(){const el=document.getElementById('savedPlays'),empty=document.getElementById('noSavedPlays');if(!el)return;el.innerHTML=playSaved.map(p=>`<div class="playItem"><b>${esc(p.name)}</b><small>${esc(p.category||'Custom')}${p.notes?' · '+esc(p.notes):''}</small><button onclick="loadSavedPlay('${esc(p.id)}')">Load Play</button><button style="margin-top:4px;background:#dc2626" onclick="deleteSavedPlay('${esc(p.id)}')">Delete</button></div>`).join('');empty.style.display=playSaved.length?'none':'block'}
-function renderPresetSelect(){const cat=document.getElementById('playCategory').value,sel=document.getElementById('playPreset');sel.innerHTML=PRESET_PLAYS[cat].map((p,i)=>`<option value="${i}">${esc(p[0])}</option>`).join('');loadPresetPlay()}
+function renderPresetSelect(){const cat=document.getElementById('playCategory').value,sel=document.getElementById('playPreset');sel.innerHTML='<option value="">Choose a preset…</option>'+PRESET_PLAYS[cat].map((p,i)=>`<option value="${i}">${esc(p[0])}</option>`).join('');sel.value='';}
+function startCustomPlay(){stopPlayAnimation();presetReadOnly=false;playStrokes=[];playTool='draw';const sel=document.getElementById('playPreset');if(sel)sel.value='';document.getElementById('customPlayName').value='';document.getElementById('customPlayNotes').value='';document.getElementById('presetDescription').textContent='Blank custom board — draw routes, add players and build your own play.';drawPlay();toast('Blank custom board ready')}
 function presetStrokes(code){
  // Preset coordinates are normalized to the PLAYING SURFACE, not the whole canvas.
  // This keeps player feet/route points aligned with the painted court on every screen size.
@@ -440,6 +451,16 @@ function presetStrokes(code){
   ato:[[.50,.78],[.16,.62],[.84,.62],[.34,.43],[.66,.43]],
   need3:[[.50,.78],[.16,.62],[.84,.62],[.34,.43],[.66,.43]],
   protect:[[.50,.78],[.16,.62],[.84,.62],[.34,.43],[.66,.43]],
+  princeton:[[.50,.82],[.16,.62],[.84,.62],[.34,.43],[.66,.43]],
+  spain:[[.50,.86],[.50,.62],[.12,.60],[.88,.60],[.50,.35]],
+  hornstwist:[[.50,.86],[.34,.48],[.66,.48],[.08,.62],[.92,.62]],
+  stagger:[[.50,.78],[.12,.86],[.88,.86],[.34,.43],[.66,.43]],
+  zipperentry:[[.50,.78],[.16,.62],[.84,.62],[.34,.43],[.66,.43]],
+  baselineTriangle:[[.50,.78],[.34,.43],[.66,.43],[.18,.68],[.82,.68]],
+  boxcross:[[.50,.78],[.34,.43],[.66,.43],[.25,.70],[.75,.70]],
+  stackslip:[[.50,.78],[.43,.67],[.43,.57],[.57,.67],[.57,.57]],
+  hornslate:[[.50,.86],[.34,.48],[.66,.48],[.08,.62],[.92,.62]],
+  cornerclear:[[.50,.78],[.16,.62],[.84,.62],[.34,.43],[.66,.43]],
   man:[[.50,.78],[.16,.62],[.84,.62],[.34,.43],[.66,.43]],
   zone23:[[.50,.78],[.30,.64],[.70,.64],[.16,.46],[.84,.46]],
   zone32:[[.50,.78],[.16,.62],[.50,.62],[.84,.62],[.34,.43]],
@@ -472,15 +493,17 @@ function presetStrokes(code){
   need3:{paths:{1:[[.50,.78],[.50,.68],[.34,.43]],2:[[.16,.62],[.30,.52],[.16,.38]],3:[[.84,.62],[.84,.42]],4:[[.34,.43],[.50,.34],[.66,.43]],5:[[.66,.43],[.66,.55]]},passes:[[1,2,.45,.55],[2,5,.72,.82]]},
   protect:{paths:{1:[[.50,.78],[.50,.68],[.50,.62]],2:[[.16,.62],[.16,.54]],3:[[.84,.62],[.84,.54]],4:[[.34,.43],[.34,.52]],5:[[.66,.43],[.66,.52]]},passes:[[1,2,.28,.38],[2,1,.68,.78]]}
  };
- const a=actions[code]||actions.motion;
+ const actionAliases={princeton:'ucla',spain:'pnr',hornstwist:'horns',stagger:'floppy',zipperentry:'zipper',baselineTriangle:'baselinebox',boxcross:'box',stackslip:'stack',hornslate:'horns',cornerclear:'need3'};
+ const a=actions[code]||actions[actionAliases[code]]||actions.motion;
  Object.entries(a.paths).forEach(([n,pts])=>out.push(A(Number(n),pts)));
  // Ball events are separate timed passes. Animation resolves the exact moving locations of passer/receiver.
  a.passes.forEach(([from,to,t0,t1])=>{const st=P(from,to,t0,t1),a0=forms[from-1],b0=forms[to-1];st.points=[courtPoint(a0),courtPoint(b0)];out.push(st)});
  out.push({tool:'ball',player:1,points:[courtPoint(forms[0])]});
  return out;
 }
-function loadPresetPlay(){stopPlayAnimation();const cat=document.getElementById('playCategory').value,idx=Number(document.getElementById('playPreset').value)||0,p=PRESET_PLAYS[cat][idx];if(!p)return;playStrokes=presetStrokes(p[2]);document.getElementById('customPlayName').value=p[0];document.getElementById('customPlayNotes').value=p[1];document.getElementById('presetDescription').textContent=p[1];const v=document.getElementById('presetVideoLink');if(v){v.href='https://www.youtube.com/results?search_query='+encodeURIComponent('basketball '+p[0]+' play demonstration coaching');v.textContent='▶ Watch a video demonstration: '+p[0]}drawPlay()}
+function loadPresetPlay(){const sel=document.getElementById('playPreset');if(!sel||sel.value==='')return;stopPlayAnimation();presetReadOnly=true;const cat=document.getElementById('playCategory').value,idx=Number(document.getElementById('playPreset').value)||0,p=PRESET_PLAYS[cat][idx];if(!p)return;playStrokes=presetStrokes(p[2]);document.getElementById('customPlayName').value=p[0];document.getElementById('customPlayNotes').value=p[1];document.getElementById('presetDescription').textContent=p[1];const v=document.getElementById('presetVideoLink');if(v){v.href='https://www.youtube.com/results?search_query='+encodeURIComponent('basketball '+p[0]+' play demonstration coaching');v.textContent='▶ Watch a video demonstration: '+p[0]}drawPlay()}
 function savePlayVariation(){
+ if(presetReadOnly)return toast('Presets are view-only. Create a custom board to make a variation.');
  const baseName=document.getElementById('customPlayName').value.trim()||'Basketball Play';
  const name=prompt('Name this variation:',baseName+' - Variation');if(!name)return;
  if(!playStrokes.length)return toast('Load or draw a play first');
@@ -567,7 +590,7 @@ async function sendTeamMessage(){
 document.getElementById('chatTeamCode')?.addEventListener('change',()=>{if(teamChatDb)listenTeamChat()});
 try{const cfg=JSON.parse(localStorage.getItem('basketball_team_chat_firebase_v1')||'null');if(cfg){document.getElementById('fbApiKey').value=cfg.apiKey||'';document.getElementById('fbAuthDomain').value=cfg.authDomain||'';document.getElementById('fbDatabaseURL').value=cfg.databaseURL||'';document.getElementById('fbProjectId').value=cfg.projectId||'';document.getElementById('fbAppId').value=cfg.appId||''}}catch(_){}
 
-function initPlays(){try{const v=JSON.parse(localStorage.getItem(PLAYS_KEY)||'[]');playSaved=Array.isArray(v)?v:[]}catch(_){playSaved=[]}setupPlayCanvas();renderPresetSelect();renderSavedPlays()}
+function initPlays(){try{const v=JSON.parse(localStorage.getItem(PLAYS_KEY)||'[]');playSaved=Array.isArray(v)?v:[]}catch(_){playSaved=[]}setupPlayCanvas();renderPresetSelect();startCustomPlay();renderSavedPlays()}
 
 function render(){document.getElementById('opponent').value=live.opponent||'';document.getElementById('date').value=live.date||today();document.getElementById('notes').value=live.notes||'';document.getElementById('q').textContent='Q'+live.q;document.getElementById('score').textContent=Number(live.score)||0;renderPlayersBar();displaySelected();updateGameClock();renderTable();renderPlayersPage();season();games()}
 ['opponent','date','notes'].forEach(id=>document.getElementById(id).addEventListener(id==='date'?'change':'input',()=>{syncInputs();save()}));
