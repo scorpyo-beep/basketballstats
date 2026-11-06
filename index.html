@@ -105,7 +105,7 @@ input,select,textarea{width:100%;min-width:0;border:1px solid #d1d9e0;border-rad
 <section id="plays" class="hidden">
  <div class="card"><h2>📋 Coaches Court Pad</h2><p class="playHint">Vertical half-court view: basket at the top, half-court line at the bottom. Choose a preset to see the correct starting formation, then animate the play.</p>
  <div class="playLayout"><div>
-  <div class="courtWrap"><canvas id="playCanvas" class="courtCanvas" width="560" height="900" aria-label="Vertical basketball half-court drawing pad"></canvas>
+  <div class="courtWrap"><canvas id="playCanvas" class="courtCanvas" width="560" height="540" aria-label="Scaled vertical basketball half-court drawing pad"></canvas>
 <div style="display:flex;gap:12px;flex-wrap:wrap;font-size:12px;margin:6px 0 10px;color:#475569"><span>🔵 Offense 1–5</span><span>🔴 Defense 1–5</span><span>🟠 Ball</span><span>🟢 Pass path</span><span>🟡 Player route</span></div></div>
   <div class="playBtns"><button class="blue" onclick="setPlayTool('draw')">✏️ Draw</button><button class="blue" onclick="setPlayTool('arrow')">➡ Arrow</button><button class="orange" onclick="setPlayTool('erase')">⌫ Erase</button><button onclick="undoPlayStroke()">↶ Undo</button><button onclick="clearPlayCourt()" class="red">Clear Court</button><button class="green" onclick="saveCustomPlay()">💾 Save Play</button></div>
   <div class="playBtns" style="margin-top:6px"><label style="font-size:11px">Player marker <select id="playMarkerNumber"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option></select></label><button class="blue" onclick="setPlayTool('move')">✋ Move Players</button><button class="blue" onclick="setPlayTool('offense')">🔵 Add Offense</button><button class="orange" onclick="setPlayTool('defense')">🔴 Add Defense</button><button class="green" onclick="animatePlay()">▶ Animate</button><button onclick="stopPlayAnimation()">■ Stop</button><button onclick="savePlayVariation()">＋ Save Variation</button><button onclick="printPlay()">🖨 Print</button><button onclick="sharePlay()">↗ Share</button></div>
@@ -347,26 +347,31 @@ const PRESET_PLAYS={
 function courtBase(){
  const c=document.getElementById('playCanvas');if(!c)return;
  const x=c.getContext('2d'),w=c.width,h=c.height;
- x.clearRect(0,0,w,h);x.fillStyle='#e8f0e5';x.fillRect(0,0,w,h);
- x.strokeStyle='#9bad99';x.lineWidth=5;x.lineCap='round';
- // Portrait half court: baseline and hoop at the top; half-court line at the bottom.
- const cx=w/2,baseY=112,halfY=h-28;
- x.strokeRect(18,baseY,w-36,halfY-baseY);
- // Backboard and rim
- x.lineWidth=7;x.beginPath();x.moveTo(cx-72,baseY+12);x.lineTo(cx+72,baseY+12);x.stroke();
- x.lineWidth=4;x.beginPath();x.arc(cx,baseY+48,18,0,Math.PI*2);x.stroke();
- // Restricted area / lane
- x.lineWidth=3;x.strokeRect(cx-105,baseY,210,255);
- // Free-throw line and circle
- x.beginPath();x.moveTo(cx-105,baseY+255);x.lineTo(cx+105,baseY+255);x.stroke();
- x.beginPath();x.arc(cx,baseY+255,105,0,Math.PI);x.stroke();
- // Three-point line: straight corners and broad arc
- x.beginPath();x.moveTo(20,baseY+205);x.lineTo(20,baseY+145);
- x.arc(cx,baseY+48,355,Math.PI*.25,Math.PI*.75,false);
- x.lineTo(w-20,baseY+205);x.stroke();
- // Corner lines / half-court boundary
- x.beginPath();x.moveTo(18,halfY);x.lineTo(w-18,halfY);x.stroke();
- x.fillStyle='#64748b';x.font='bold 16px system-ui';x.textAlign='center';x.fillText('BASKET',cx,baseY-16);x.fillText('HALF COURT',cx,halfY-12);
+ x.clearRect(0,0,w,h);x.fillStyle='#d19a5b';x.fillRect(0,0,w,h);
+ const left=24,right=w-24,top=24,bottom=h-24,cx=w/2;
+ const line='#fff4df';
+ x.strokeStyle=line;x.lineWidth=3;x.lineCap='round';x.lineJoin='round';
+ // True half-court proportions: 50 ft wide by 47 ft from baseline to mid-court.
+ x.strokeRect(left,top,right-left,bottom-top);
+ // Backboard and rim at the top baseline.
+ x.lineWidth=5;x.beginPath();x.moveTo(cx-38,top+17);x.lineTo(cx+38,top+17);x.stroke();
+ x.lineWidth=3;x.beginPath();x.arc(cx,top+39,11,0,Math.PI*2);x.stroke();
+ // Restricted-area semicircle below the rim.
+ x.beginPath();x.arc(cx,top+39,38,0,Math.PI);x.stroke();
+ // Lane / paint (16 ft wide) and free-throw line (19 ft from baseline).
+ const laneW=164,ftY=top+198;
+ x.beginPath();x.moveTo(cx-laneW/2,top);x.lineTo(cx-laneW/2,ftY);x.lineTo(cx+laneW/2,ftY);x.lineTo(cx+laneW/2,top);x.stroke();
+ x.beginPath();x.arc(cx,ftY,82,0,Math.PI);x.stroke();
+ // Three-point line: straight corner sections and a correctly oriented arc.
+ const cornerX=left+40,cornerY=top+169,threeR=238;
+ x.beginPath();x.moveTo(cornerX,top);x.lineTo(cornerX,cornerY);
+ x.arc(cx,top+39,threeR,Math.atan2(cornerY-(top+39),cornerX-cx),Math.atan2(cornerY-(top+39),right-40-cx),true);
+ x.lineTo(right-40,top);x.stroke();
+ // Mid-court line and the visible top half of the centre circle.
+ x.beginPath();x.moveTo(left,bottom);x.lineTo(right,bottom);x.stroke();
+ x.beginPath();x.arc(cx,bottom,54,Math.PI,Math.PI*2);x.stroke();
+ x.fillStyle=line;x.font='bold 15px system-ui';x.textAlign='center';
+ x.fillText('BASKET',cx,top-7);x.fillText('HALF COURT',cx,bottom-9);
 }
 function drawPlay(options={}){
  const c=document.getElementById('playCanvas');if(!c)return;courtBase();const x=c.getContext('2d');
@@ -408,9 +413,10 @@ function deleteSavedPlay(id){if(!confirm('Delete this saved play?'))return;playS
 function renderSavedPlays(){const el=document.getElementById('savedPlays'),empty=document.getElementById('noSavedPlays');if(!el)return;el.innerHTML=playSaved.map(p=>`<div class="playItem"><b>${esc(p.name)}</b><small>${esc(p.category||'Custom')}${p.notes?' · '+esc(p.notes):''}</small><button onclick="loadSavedPlay('${esc(p.id)}')">Load Play</button><button style="margin-top:4px;background:#dc2626" onclick="deleteSavedPlay('${esc(p.id)}')">Delete</button></div>`).join('');empty.style.display=playSaved.length?'none':'block'}
 function renderPresetSelect(){const cat=document.getElementById('playCategory').value,sel=document.getElementById('playPreset');sel.innerHTML=PRESET_PLAYS[cat].map((p,i)=>`<option value="${i}">${esc(p[0])}</option>`).join('');loadPresetPlay()}
 function presetStrokes(code){
- const marker=(n,x,y,team='offense')=>({tool:team+n,color:team==='offense'?'#07558a':'#dc2626',points:[{x,y}]});
- const route=(n,pts)=>({tool:'arrow',player:n,team:'offense',color:'#f59e0b',points:pts.map(([x,y])=>({x,y}))});
- const pass=(from,to,a,b,t0=.28,t1=.43)=>({tool:'pass',player:from,receiver:to,t0,t1,color:'#16a34a',points:[{x:a[0],y:a[1]},{x:b[0],y:b[1]}]});
+ const courtPoint=(x,y)=>({x,y:.10+y*.60});
+ const marker=(n,x,y,team='offense')=>({tool:team+n,color:team==='offense'?'#07558a':'#dc2626',points:[courtPoint(x,y)]});
+ const route=(n,pts)=>({tool:'arrow',player:n,team:'offense',color:'#f59e0b',points:pts.map(([x,y])=>courtPoint(x,y))});
+ const pass=(from,to,a,b,t0=.28,t1=.43)=>({tool:'pass',player:from,receiver:to,t0,t1,color:'#16a34a',points:[courtPoint(a[0],a[1]),courtPoint(b[0],b[1])]});
  // Normalized coordinates are portrait: y=.12 is the rim; y=.94 is mid-court.
  const F={
   motion:[[.50,.78],[.18,.68],[.82,.68],[.12,.86],[.88,.86]],
@@ -466,7 +472,7 @@ function presetStrokes(code){
  };
  const paths=R[code]||R.motion;
  Object.keys(paths).forEach(k=>{const n=Number(k),pts=paths[k].map(q=>[q[0],q[1]]);pts[0]=forms[n-1];out.push(route(n,pts));});
- const ballOwner=1;out.push({tool:'ball',player:ballOwner,points:[{x:forms[0][0]+.035,y:forms[0][1]}]});
+ const ballOwner=1;out.push({tool:'ball',player:ballOwner,points:[{x:forms[0][0]+.025,y:courtPoint(forms[0][0],forms[0][1]).y}]});
  const receiver=code==='horns'?2:code==='pnr'?2:code==='givego'?2:code==='ucla'?2:code==='motion'?2:code==='floppy'?4:2;
  out.push(pass(ballOwner,receiver,forms[0],forms[receiver-1],.25,.42));
  return out;
