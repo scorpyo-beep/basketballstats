@@ -37,6 +37,9 @@ input,select,textarea{width:100%;min-width:0;border:1px solid #d1d9e0;border-rad
 
 /* Coaches play pad */
 .playTools{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.playTools .wide{grid-column:1/-1}.courtWrap{width:100%;overflow:hidden;border-radius:10px;background:#e9f2e8;border:2px solid #b7c9b5;touch-action:none}.courtCanvas{touch-action:none;display:block;width:100%;height:auto;touch-action:none;cursor:crosshair}.playBtns{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-top:7px}.playBtns button,.playTools button{border:0;border-radius:8px;padding:9px 5px;font-size:11px;font-weight:900}.playList{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.playItem{border:1px solid var(--line);border-radius:9px;padding:8px;background:#f8fafc;min-width:0}.playItem b{display:block;font-size:11px}.playItem small{display:block;color:#64748b;font-size:9px;margin:3px 0 6px}.playItem button{width:100%;border:0;border-radius:7px;padding:7px;background:var(--blue);color:white;font-size:10px;font-weight:900}.playHint{font-size:10px;line-height:1.45;color:#64748b}
+.courtWrap.board-fullscreen{position:fixed;inset:0;z-index:9999;background:#e9f2e8;border:0;border-radius:0;display:flex;align-items:center;justify-content:center;padding:12px;overflow:auto}
+.courtWrap.board-fullscreen .courtCanvas{width:auto;height:auto;max-width:100%;max-height:calc(100dvh - 24px);object-fit:contain}
+body.board-lock{overflow:hidden}
 @media(min-width:761px){.playLayout{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(260px,1fr);gap:10px;align-items:start}.playList{grid-template-columns:1fr}}
 
 </style>
@@ -103,11 +106,11 @@ input,select,textarea{width:100%;min-width:0;border:1px solid #d1d9e0;border-rad
 </section>
 
 <section id="plays" class="hidden">
- <div class="card"><h2>📋 Coaches Court Pad</h2><p class="playHint">CUSTOM PLAY STEPS: 1) Add Offense/Defense and tap the court once for each numbered player. 2) Select a player number and team. 3) Choose Draw Player Route and drag that player's path. Repeat for every moving player. 4) Choose Pass From/To, then Draw Pass and drag the pass line. 5) Select the ball carrier, choose Set Ball, and tap the player marker (the ball snaps to that player), then Animate. Presets are read-only.</p>
+ <div class="card"><h2>📋 Coaches Court Pad</h2><p class="playHint">CUSTOM PLAY STEPS: 1) Add Offense/Defense and tap the court once for each numbered player. 2) Select a player number and team. 3) Choose Draw Player Route and drag that player's path. Repeat for every moving player. 4) Choose Pass From/To, then Draw Pass and drag the pass line. 5) Set Ball, tap the player who starts with it, then Animate. Presets are read-only.</p>
  <div class="playLayout"><div>
-  <div class="courtWrap"><canvas id="playCanvas" class="courtCanvas" width="700" height="660" aria-label="Scaled basketball half-court drawing pad"></canvas>
+  <div class="courtWrap" id="courtWrap"><canvas id="playCanvas" class="courtCanvas" width="700" height="660" aria-label="Scaled basketball half-court drawing pad"></canvas>
 <div style="display:flex;gap:12px;flex-wrap:wrap;font-size:12px;margin:6px 0 10px;color:#475569"><span>🔵 Offense 1–5</span><span>🔴 Defense 1–5</span><span>🟠 Ball</span><span>🟢 Pass path</span><span>🟡 Player route</span></div></div>
-  <div class="playBtns"><button class="green" onclick="startCustomPlay()">＋ New Custom Board</button><button class="blue" onclick="setPlayTool('draw')">✏️ Draw</button><button class="blue" onclick="setPlayTool('arrow')">➡ Arrow</button><button class="orange" onclick="setPlayTool('erase')">⌫ Erase</button><button onclick="undoPlayStroke()">↶ Undo</button><button onclick="clearPlayCourt()" class="red">Clear Court</button><button class="green" onclick="saveCustomPlay()">💾 Save Play</button></div>
+  <div class="playBtns"><button class="blue" onclick="toggleBoardFullscreen()">⛶ Full Screen</button><button class="green" onclick="startCustomPlay()">＋ New Custom Board</button><button class="blue" onclick="setPlayTool('draw')">✏️ Draw</button><button class="blue" onclick="setPlayTool('arrow')">➡ Arrow</button><button class="orange" onclick="setPlayTool('erase')">⌫ Erase</button><button onclick="undoPlayStroke()">↶ Undo</button><button onclick="clearPlayCourt()" class="red">Clear Court</button><button class="green" onclick="saveCustomPlay()">💾 Save Play</button></div>
   <div class="playTools" style="margin-top:6px"><div><label>Player number for route</label><select id="playMarkerNumber"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option></select></div><div><label>Route belongs to</label><select id="playRouteTeam"><option value="offense">Offense</option><option value="defense">Defense</option></select></div></div>
   <div class="playBtns"><button class="blue" onclick="setPlayTool('move')">✋ Move Players</button><button class="blue" onclick="setPlayTool('offense')">🔵 Add Offense</button><button class="orange" onclick="setPlayTool('defense')">🔴 Add Defense</button><button class="blue" onclick="setPlayTool('playerRoute')">〰 Draw Player Route</button><button class="green" onclick="setPlayTool('pass')">🏀 Draw Pass</button><button onclick="setPlayTool('ball')">🟠 Set Ball</button></div>
   <div class="playTools"><div><label>Pass from</label><select id="playPassFrom"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></div><div><label>Pass to</label><select id="playPassTo"><option>2</option><option>1</option><option>3</option><option>4</option><option>5</option></select></div></div>
@@ -212,7 +215,33 @@ function recoverTimer(){const t=live.timer;if(!t||!t.running)return;const id=t.p
 function resetTimer(){if(!selectedPlayer)return toast('Select a player first');if(timerRunning)pauseTimer(false);row(selectedPlayer).seconds=0;timerPlayerId=selectedPlayer;save();updateGameClock();renderTable();toast('Playing time reset')}
 function saveGame(){if(!data.players.length)return toast('Add players first');syncInputs();const opponent=String(live.opponent||'').trim();if(!opponent)return toast('Enter the opponent');if(timerRunning)pauseTimer(false);const date=live.date||today();data.games.push({id:Date.now().toString(),opponent,date,notes:String(live.notes||''),score:Number(live.score)||0,q:Number(live.q)||1,rows:JSON.parse(JSON.stringify(live.rows||{}))});live={opponent:'',date:today(),notes:'',q:1,score:0,teamHistory:[],rows:{},history:[],timer:{running:false,playerId:null,startedAt:0}};selectedPlayer=null;timerPlayerId=null;save();render();toast('Game saved');setTimeout(()=>page('games'),350)}
 function season(){const t=document.getElementById('seasonTable');let h='<tr><th>PLAYER</th><th>GP</th><th>PTS</th><th>PPG</th><th>REB</th><th>RPG</th><th>AST</th><th>APG</th></tr>';data.players.forEach(p=>{const total=blank();let gp=0;data.games.forEach(g=>{const gr=g&&g.rows&&g.rows[p.id];if(gr){gp++;Object.keys(total).forEach(k=>total[k]+=(Number(gr[k])||0))}});const s=calc(total);h+=`<tr><td>#${esc(p.num)} ${esc(p.name)}</td><td>${gp}</td><td>${s.pts}</td><td>${gp?(s.pts/gp).toFixed(1):'0.0'}</td><td>${s.reb}</td><td>${gp?(s.reb/gp).toFixed(1):'0.0'}</td><td>${s.ast}</td><td>${gp?(s.ast/gp).toFixed(1):'0.0'}</td></tr>`});t.innerHTML=h}
-function games(){const c=document.getElementById('gamesContent');if(!data.games.length){c.innerHTML='<p class="muted" style="font-size:11px">No saved games yet.</p>';return}c.innerHTML=[...data.games].reverse().map(g=>`<div class="gcard"><div class="ghead"><div><div class="opp">${esc(g.opponent||'Unknown')}</div><div class="date">${esc(g.date||'')}</div></div><div style="font-weight:950;font-size:16px">${Number(g.score)||0}</div></div>${g.notes?`<div class="muted" style="font-size:10px;margin-top:5px;white-space:pre-wrap">${esc(g.notes)}</div>`:''}<button class="red" style="border:0;border-radius:7px;padding:7px 9px;font-size:10px;margin-top:6px" onclick="delGame('${esc(g.id)}')">Delete Game</button></div>`).join('')}
+function games(){const c=document.getElementById('gamesContent');if(!data.games.length){c.innerHTML='<p class="muted" style="font-size:11px">No saved games yet.</p>';return}c.innerHTML=[...data.games].reverse().map(g=>`<div class="gcard"><div class="ghead"><div><div class="opp">${esc(g.opponent||'Unknown')}</div><div class="date">${esc(g.date||'')}</div></div><div style="font-weight:950;font-size:16px">${Number(g.score)||0}</div></div>${g.notes?`<div class="muted" style="font-size:10px;margin-top:5px;white-space:pre-wrap">${esc(g.notes)}</div>`:''}<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px"><button class="blue" style="border:0;border-radius:7px;padding:7px 9px;font-size:10px" onclick="editSavedGame('${esc(g.id)}')">Edit Game</button><button class="red" style="border:0;border-radius:7px;padding:7px 9px;font-size:10px" onclick="delGame('${esc(g.id)}')">Delete Game</button></div></div>`).join('')}
+
+function editSavedGame(id){
+ const g=data.games.find(x=>String(x.id)===String(id));if(!g)return toast('Game not found');
+ const rowFields=[['2PM','two'],['2PMiss','twoMiss'],['3PM','three'],['3PMiss','threeMiss'],['FTM','ft'],['FTMiss','ftMiss'],['ORB','orb'],['DRB','drb'],['AST','ast'],['STL','stl'],['BLK','blk'],['TO','to'],['PF','pf'],['Seconds','seconds']];
+ const modal=document.createElement('div');modal.id='editSavedGameModal';modal.style.cssText='position:fixed;inset:0;z-index:10000;background:#0009;display:flex;align-items:center;justify-content:center;padding:12px';
+ const panel=document.createElement('div');panel.style.cssText='background:white;color:#172033;border-radius:14px;padding:16px;width:min(760px,100%);max-height:92dvh;overflow:auto';
+ const safe=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+ panel.innerHTML=`<h2>Edit Saved Game</h2><label>Opponent</label><input id="egOpponent" value="${safe(g.opponent)}"><label>Date</label><input id="egDate" type="date" value="${safe(g.date)}"><label>Team Score</label><input id="egScore" type="number" min="0" value="${Number(g.score)||0}"><label>Quarter</label><input id="egQuarter" type="number" min="1" max="10" value="${Number(g.q)||1}"><label>Notes</label><textarea id="egNotes">${safe(g.notes)}</textarea><h3>Player statistics</h3><div id="egRows"></div><div style="display:flex;gap:8px;position:sticky;bottom:-16px;background:white;padding:12px 0"><button class="green" id="egSave">Save Changes</button><button class="red" id="egCancel">Cancel</button></div>`;
+ const rows=panel.querySelector('#egRows');
+ data.players.forEach(p=>{
+  const r={...blank(),...(g.rows&&g.rows[p.id]||{})};
+  const card=document.createElement('div');card.style.cssText='border:1px solid #ddd;border-radius:9px;padding:10px;margin:8px 0';
+  card.innerHTML=`<b>#${safe(p.num)} ${safe(p.name)}</b><div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-top:8px">${rowFields.map(([label,key])=>`<label style="font-size:11px">${label}<input type="number" min="0" step="1" data-player="${safe(p.id)}" data-stat="${key}" value="${Number(r[key])||0}" style="width:100%"></label>`).join('')}</div>`;
+  rows.appendChild(card);
+ });
+ panel.querySelector('#egCancel').onclick=()=>modal.remove();
+ panel.querySelector('#egSave').onclick=()=>{
+  const opponent=panel.querySelector('#egOpponent').value.trim();if(!opponent)return alert('Enter an opponent.');
+  const updatedRows={...(g.rows||{})};
+  panel.querySelectorAll('[data-player][data-stat]').forEach(inp=>{const pid=inp.dataset.player,key=inp.dataset.stat;updatedRows[pid]=updatedRows[pid]||{...blank()};updatedRows[pid][key]=Math.max(0,Number(inp.value)||0)});
+  g.opponent=opponent;g.date=panel.querySelector('#egDate').value||g.date;g.score=Math.max(0,Number(panel.querySelector('#egScore').value)||0);g.q=Math.max(1,Number(panel.querySelector('#egQuarter').value)||1);g.notes=panel.querySelector('#egNotes').value;g.rows=updatedRows;
+  save();modal.remove();games();season();toast('Saved game updated; season totals recalculated');
+ };
+ modal.appendChild(panel);document.body.appendChild(modal);
+}
+
 function delGame(id){if(!confirm('Delete this game?'))return;data.games=data.games.filter(g=>String(g.id)!==String(id));save();games();season();toast('Game deleted')}
 function profile(){return{name:document.getElementById('pName').value.trim(),num:document.getElementById('pNum').value.trim(),team:document.getElementById('pTeam').value.trim(),age:document.getElementById('pAge').value.trim(),height:document.getElementById('pHeight').value.trim(),weight:document.getElementById('pWeight').value.trim()}}
 function savePlayer(){const p=profile();if(!p.name)return toast('Enter a player name');if(editing){const old=data.players.find(x=>String(x.id)===String(editing));if(!old)return toast('Player not found');Object.assign(old,p);toast('Player updated')}else{data.players.push({...p,id:Date.now().toString()+Math.random().toString(36).slice(2)});toast('Player added')}editing=null;clearForm();setEditMode(false);save();render();renderPlayersPage()}
@@ -416,22 +445,7 @@ function setupPlayCanvas(){
  let dragIndex=null,isDrawing=false,rafPending=false;
  const redraw=()=>{if(rafPending)return;rafPending=true;requestAnimationFrame(()=>{rafPending=false;drawPlay()})};
  const hit=pos=>{const rect=c.getBoundingClientRect(),radius=32/Math.min(rect.width/c.width,rect.height/c.height);for(let i=playStrokes.length-1;i>=0;i--){const st=playStrokes[i];if(!/^(offense|defense)[1-5]$/.test(st.tool)||!st.points?.length)continue;const q=st.points[0];if(Math.hypot((q.x-pos.x)*c.width,(q.y-pos.y)*c.height)<=radius)return i}return -1};
- c.addEventListener('pointerdown',e=>{if(presetReadOnly){toast('Preset is view-only. Start a new custom board to draw.');return}e.preventDefault();c.setPointerCapture(e.pointerId);const pos=playPos(e),idx=hit(pos);if(idx>=0&&(playTool==='move'||playTool==='draw'||playTool==='arrow')){dragIndex=idx;playPointer=e.pointerId;return}if(playTool==='offense'||playTool==='defense'){const n=document.getElementById('playMarkerNumber').value;playStrokes=playStrokes.filter(st=>st.tool!==playTool+n);playStrokes.push({tool:playTool+n,color:playTool==='offense'?'#07558a':'#dc2626',points:[pos]});drawPlay();return}if(playTool==='ball'){
- const player=Number(document.getElementById('playMarkerNumber').value),team=document.getElementById('playRouteTeam')?.value||'offense';
- const marker=playStrokes.find(st=>st.tool===team+player);
- const ballPoint=marker?.points?.[0]||pos;
- playStrokes=playStrokes.filter(st=>st.tool!=='ball');
- playStrokes.push({tool:'ball',player,team,points:[{x:ballPoint.x,y:ballPoint.y}]});
- drawPlay();toast(marker?'Ball assigned to player '+player:'Ball placed; add the selected player marker to attach it');return
- }playPointer=e.pointerId;isDrawing=true;const routeTeam=document.getElementById('playRouteTeam')?.value||'offense',routePlayer=Number(document.getElementById('playMarkerNumber').value);const stroke={tool:playTool==='playerRoute'?'arrow':playTool,color:playTool==='erase'?'#d49a59':(playTool==='pass'?'#16a34a':document.getElementById('playColor').value),points:[pos]};if(playTool==='playerRoute'){
- stroke.player=routePlayer;stroke.team=routeTeam;
- const marker=playStrokes.find(st=>st.tool===routeTeam+routePlayer);
- if(marker?.points?.[0]){
-  const origin=marker.points[0],distance=Math.hypot((origin.x-pos.x)*c.width,(origin.y-pos.y)*c.height);
-  stroke.points=[{x:origin.x,y:origin.y}];
-  if(distance>8)stroke.points.push(pos);
- }
- }if(playTool==='pass'){stroke.player=Number(document.getElementById('playPassFrom').value);stroke.receiver=Number(document.getElementById('playPassTo').value);stroke.t0=.25+playStrokes.filter(q=>q.tool==='pass').length*.18;stroke.t1=stroke.t0+.12;}playStrokes.push(stroke);drawPlay()});
+ c.addEventListener('pointerdown',e=>{if(presetReadOnly){toast('Preset is view-only. Start a new custom board to draw.');return}e.preventDefault();c.setPointerCapture(e.pointerId);const pos=playPos(e),idx=hit(pos);if(idx>=0&&(playTool==='move'||playTool==='draw'||playTool==='arrow')){dragIndex=idx;playPointer=e.pointerId;return}if(playTool==='offense'||playTool==='defense'){const n=document.getElementById('playMarkerNumber').value;playStrokes=playStrokes.filter(st=>st.tool!==playTool+n);playStrokes.push({tool:playTool+n,color:playTool==='offense'?'#07558a':'#dc2626',points:[pos]});drawPlay();return}if(playTool==='ball'){playStrokes=playStrokes.filter(st=>st.tool!=='ball');playStrokes.push({tool:'ball',player:Number(document.getElementById('playMarkerNumber').value),points:[pos]});drawPlay();return}playPointer=e.pointerId;isDrawing=true;const routeTeam=document.getElementById('playRouteTeam')?.value||'offense',routePlayer=Number(document.getElementById('playMarkerNumber').value);const stroke={tool:playTool==='playerRoute'?'arrow':playTool,color:playTool==='erase'?'#d49a59':(playTool==='pass'?'#16a34a':document.getElementById('playColor').value),points:[pos]};if(playTool==='playerRoute'){stroke.player=routePlayer;stroke.team=routeTeam;}if(playTool==='pass'){stroke.player=Number(document.getElementById('playPassFrom').value);stroke.receiver=Number(document.getElementById('playPassTo').value);stroke.t0=.25+playStrokes.filter(q=>q.tool==='pass').length*.18;stroke.t1=stroke.t0+.12;}playStrokes.push(stroke);drawPlay()});
  c.addEventListener('pointermove',e=>{if(playPointer!==e.pointerId)return;const pos=playPos(e);if(dragIndex!==null){playStrokes[dragIndex].points[0]=pos;redraw();return}if(isDrawing){playStrokes[playStrokes.length-1].points.push(pos);redraw()}});
  const end=e=>{if(playPointer===e.pointerId){playPointer=null;dragIndex=null;isDrawing=false;drawPlay()}};c.addEventListener('pointerup',end);c.addEventListener('pointercancel',end);drawPlay();
 }
@@ -442,6 +456,17 @@ function loadSavedPlay(id){const p=playSaved.find(x=>x.id===id);if(!p)return;pla
 function deleteSavedPlay(id){if(!confirm('Delete this saved play?'))return;playSaved=playSaved.filter(p=>p.id!==id);localStorage.setItem(PLAYS_KEY,JSON.stringify(playSaved));renderSavedPlays()}
 function renderSavedPlays(){const el=document.getElementById('savedPlays'),empty=document.getElementById('noSavedPlays');if(!el)return;el.innerHTML=playSaved.map(p=>`<div class="playItem"><b>${esc(p.name)}</b><small>${esc(p.category||'Custom')}${p.notes?' · '+esc(p.notes):''}</small><button onclick="loadSavedPlay('${esc(p.id)}')">Load Play</button><button style="margin-top:4px;background:#dc2626" onclick="deleteSavedPlay('${esc(p.id)}')">Delete</button></div>`).join('');empty.style.display=playSaved.length?'none':'block'}
 function renderPresetSelect(){const cat=document.getElementById('playCategory').value,sel=document.getElementById('playPreset');sel.innerHTML='<option value="">Choose a preset…</option>'+PRESET_PLAYS[cat].map((p,i)=>`<option value="${i}">${esc(p[0])}</option>`).join('');sel.value='';}
+
+function toggleBoardFullscreen(){
+ const wrap=document.getElementById('courtWrap');if(!wrap)return;
+ const on=!wrap.classList.contains('board-fullscreen');
+ wrap.classList.toggle('board-fullscreen',on);document.body.classList.toggle('board-lock',on);
+ const btn=[...document.querySelectorAll('button')].find(b=>b.textContent.includes('Full Screen')||b.textContent.includes('Exit Full Screen'));
+ if(btn)btn.textContent=on?'⤢ Exit Full Screen':'⛶ Full Screen';
+ setTimeout(()=>{const c=document.getElementById('playCanvas');if(c)drawPlay()},80);
+}
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){const w=document.getElementById('courtWrap');if(w&&w.classList.contains('board-fullscreen'))toggleBoardFullscreen()}});
+
 function startCustomPlay(){stopPlayAnimation();presetReadOnly=false;playStrokes=[];playTool='draw';const sel=document.getElementById('playPreset');if(sel)sel.value='';document.getElementById('customPlayName').value='';document.getElementById('customPlayNotes').value='';document.getElementById('presetDescription').textContent='Blank custom board — draw routes, add players and build your own play.';drawPlay();toast('Blank custom board ready')}
 function presetStrokes(code){
  // Preset coordinates are normalized to the PLAYING SURFACE, not the whole canvas.
@@ -452,55 +477,52 @@ function presetStrokes(code){
  const P=(from,to,t0,t1)=>({tool:'pass',player:from,receiver:to,t0,t1,color:'#16a34a',points:[{x:0,y:0},{x:0,y:0}]});
  // All formation coordinates below use x=0 left sideline, y=0 basket baseline, y=1 half court.
  const F={
-  // Coordinates are normalized inside the court: basket at top (y=0), half-court at bottom (y=1).
-  // 5-Out: 1 at the top, 2/3 on wings, 4/5 in deep corners.
-  motion:[[.50,.42],[.20,.55],[.80,.55],[.075,.76],[.925,.76]],
-  horns:[[.50,.42],[.34,.43],[.66,.43],[.075,.76],[.925,.76]],
-  pnr:[[.50,.42],[.50,.52],[.18,.56],[.82,.56],[.075,.76]],
-  givego:[[.50,.42],[.20,.55],[.80,.55],[.075,.76],[.925,.76]],
-  ucla:[[.50,.42],[.20,.55],[.80,.55],[.34,.43],[.66,.43]],
-  floppy:[[.50,.42],[.075,.76],[.925,.76],[.34,.43],[.66,.43]],
-  box:[[.50,.42],[.34,.43],[.66,.43],[.25,.68],[.75,.68]],
-  flex:[[.50,.42],[.20,.55],[.80,.55],[.34,.43],[.66,.43]],
-  baselinebox:[[.50,.42],[.34,.43],[.66,.43],[.25,.68],[.75,.68]],
-  stack:[[.50,.42],[.46,.72],[.46,.78],[.54,.72],[.54,.78]],
-  sidelinebox:[[.50,.42],[.20,.55],[.80,.55],[.34,.43],[.66,.43]],
-  zipper:[[.50,.42],[.20,.55],[.80,.55],[.34,.43],[.66,.43]],
-  press14:[[.50,.42],[.20,.55],[.80,.55],[.34,.43],[.66,.43]],
-  press212:[[.50,.42],[.20,.55],[.80,.55],[.34,.43],[.66,.43]],
-  diamond:[[.50,.42],[.30,.57],[.70,.57],[.42,.73],[.58,.73]],
-  twoforone:[[.50,.42],[.20,.55],[.80,.55],[.34,.43],[.66,.43]],
-  ato:[[.50,.42],[.20,.55],[.80,.55],[.34,.43],[.66,.43]],
-  need3:[[.50,.42],[.20,.55],[.80,.55],[.075,.76],[.925,.76]],
-  protect:[[.50,.42],[.20,.55],[.80,.55],[.34,.43],[.66,.43]],
-  princeton:[[.50,.42],[.20,.55],[.80,.55],[.075,.76],[.925,.76]],
-  spain:[[.50,.42],[.50,.52],[.18,.56],[.82,.56],[.075,.76]],
-  hornstwist:[[.50,.42],[.34,.43],[.66,.43],[.075,.76],[.925,.76]],
-  stagger:[[.50,.42],[.075,.76],[.925,.76],[.34,.43],[.66,.43]],
-  zipperentry:[[.50,.42],[.20,.55],[.80,.55],[.34,.43],[.66,.43]],
-  triangle:[[.50,.42],[.78,.57],[.78,.76],[.20,.57],[.42,.30]],
-  amoeba:[[.50,.80],[.22,.62],[.78,.62],[.50,.43],[.50,.20]],
-  baselineTriangle:[[.50,.42],[.34,.43],[.66,.43],[.18,.68],[.82,.68]],
-  boxcross:[[.50,.42],[.34,.43],[.66,.43],[.25,.68],[.75,.68]],
-  stackslip:[[.50,.42],[.46,.72],[.46,.78],[.54,.72],[.54,.78]],
-  hornslate:[[.50,.42],[.34,.43],[.66,.43],[.075,.76],[.925,.76]],
-  cornerclear:[[.50,.42],[.20,.55],[.80,.55],[.075,.76],[.925,.76]],
-  man:[[.50,.42],[.20,.55],[.80,.55],[.34,.43],[.66,.43]],
-  zone23:[[.50,.42],[.30,.57],[.70,.57],[.16,.46],[.84,.46]],
-  zone32:[[.50,.42],[.16,.55],[.50,.55],[.84,.55],[.34,.43]],
-  zone131:[[.50,.42],[.16,.55],[.84,.55],[.35,.46],[.65,.46]],
-  fullman:[[.50,.42],[.16,.62],[.84,.62],[.34,.43],[.66,.43]],
-  boxone:[[.50,.42],[.30,.68],[.70,.68],[.30,.46],[.70,.46]]
+  motion:[[.50,.88],[.18,.62],[.82,.62],[.06,.35],[.94,.35]],
+  horns:[[.50,.86],[.34,.48],[.66,.48],[.08,.35],[.92,.35]],
+  pnr:[[.50,.86],[.50,.62],[.12,.60],[.88,.60],[.50,.35]],
+  givego:[[.50,.78],[.16,.62],[.84,.62],[.10,.86],[.90,.86]],
+  ucla:[[.50,.78],[.16,.62],[.84,.62],[.34,.43],[.66,.43]],
+  floppy:[[.50,.78],[.12,.86],[.88,.86],[.34,.43],[.66,.43]],
+  box:[[.50,.78],[.34,.43],[.66,.43],[.25,.70],[.75,.70]],
+  flex:[[.50,.78],[.16,.62],[.84,.62],[.34,.43],[.66,.43]],
+  baselinebox:[[.50,.78],[.34,.43],[.66,.43],[.25,.70],[.75,.70]],
+  stack:[[.50,.78],[.43,.67],[.43,.57],[.57,.67],[.57,.57]],
+  sidelinebox:[[.50,.78],[.16,.62],[.84,.62],[.34,.43],[.66,.43]],
+  zipper:[[.50,.78],[.16,.62],[.84,.62],[.34,.43],[.66,.43]],
+  press14:[[.50,.78],[.16,.62],[.84,.62],[.34,.43],[.66,.43]],
+  press212:[[.50,.78],[.16,.62],[.84,.62],[.34,.43],[.66,.43]],
+  diamond:[[.50,.78],[.30,.64],[.70,.64],[.42,.46],[.58,.46]],
+  twoforone:[[.50,.78],[.16,.62],[.84,.62],[.34,.43],[.66,.43]],
+  ato:[[.50,.78],[.16,.62],[.84,.62],[.34,.43],[.66,.43]],
+  need3:[[.50,.78],[.16,.62],[.84,.62],[.34,.43],[.66,.43]],
+  protect:[[.50,.78],[.16,.62],[.84,.62],[.34,.43],[.66,.43]],
+  princeton:[[.50,.82],[.16,.62],[.84,.62],[.34,.43],[.66,.43]],
+  spain:[[.50,.86],[.50,.62],[.12,.60],[.88,.60],[.50,.35]],
+  hornstwist:[[.50,.86],[.34,.48],[.66,.48],[.08,.35],[.92,.35]],
+  stagger:[[.50,.78],[.12,.86],[.88,.86],[.34,.43],[.66,.43]],
+  zipperentry:[[.50,.78],[.16,.62],[.84,.62],[.34,.43],[.66,.43]],
+  triangle:[[.50,.82],[.82,.52],[.82,.78],[.18,.52],[.42,.30]],
+  amoeba:[[.50,.80],[.22,.60],[.78,.60],[.50,.43],[.50,.20]],
+  baselineTriangle:[[.50,.78],[.34,.43],[.66,.43],[.18,.68],[.82,.68]],
+  boxcross:[[.50,.78],[.34,.43],[.66,.43],[.25,.70],[.75,.70]],
+  stackslip:[[.50,.78],[.43,.67],[.43,.57],[.57,.67],[.57,.57]],
+  hornslate:[[.50,.86],[.34,.48],[.66,.48],[.08,.35],[.92,.35]],
+  cornerclear:[[.50,.78],[.16,.62],[.84,.62],[.34,.43],[.66,.43]],
+  man:[[.50,.78],[.16,.62],[.84,.62],[.34,.43],[.66,.43]],
+  zone23:[[.50,.78],[.30,.64],[.70,.64],[.16,.46],[.84,.46]],
+  zone32:[[.50,.78],[.16,.62],[.50,.62],[.84,.62],[.34,.43]],
+  zone131:[[.50,.78],[.16,.62],[.84,.62],[.35,.46],[.65,.46]],
+  fullman:[[.50,.78],[.16,.62],[.84,.62],[.34,.43],[.66,.43]],
+  boxone:[[.50,.78],[.30,.68],[.70,.68],[.30,.46],[.70,.46]]
  };
  const forms=F[code]||F.motion,out=[];forms.forEach((p,i)=>out.push(M(i+1,p)));
  const defensive=['man','zone23','zone32','zone131','fullman','boxone','amoeba'].includes(code);
- let defForms=[];
- if(defensive){defForms=code==='amoeba'?[[.50,.76],[.25,.62],[.75,.62],[.50,.43],[.50,.22]]:code==='zone23'?[[.30,.42],[.70,.42],[.16,.29],[.84,.29],[.50,.23]]:code==='zone32'?[[.16,.42],[.50,.42],[.84,.42],[.34,.27],[.66,.27]]:[[.20,.40],[.38,.34],[.62,.34],[.80,.40],[.50,.22]];defForms.forEach((p,i)=>out.push(M(i+1,p,'defense')));}
+ if(defensive){const D=code==='amoeba'?[[.50,.76],[.25,.62],[.75,.62],[.50,.43],[.50,.22]]:code==='zone23'?[[.30,.42],[.70,.42],[.16,.29],[.84,.29],[.50,.23]]:code==='zone32'?[[.16,.42],[.50,.42],[.84,.42],[.34,.27],[.66,.27]]:[[.20,.40],[.38,.34],[.62,.34],[.80,.40],[.50,.22]];D.forEach((p,i)=>out.push(M(i+1,p,'defense')));}
  // Each action is a coordinated sequence, not five unrelated straight lines.
  const actions={
-  motion:{paths:{1:[[.50,.42],[.50,.34],[.30,.45]],2:[[.20,.55],[.28,.48],[.50,.42]],3:[[.80,.55],[.72,.48],[.50,.42]],4:[[.075,.76],[.075,.66],[.18,.55]],5:[[.925,.76],[.925,.66],[.82,.55]]},passes:[[1,2,.20,.29],[2,3,.52,.61],[3,5,.73,.82]]},
-  horns:{paths:{1:[[.50,.42],[.50,.34],[.34,.43],[.50,.28]],2:[[.34,.43],[.42,.34],[.50,.22]],3:[[.66,.43],[.58,.34],[.50,.22]],4:[[.075,.76],[.075,.66],[.20,.55]],5:[[.925,.76],[.925,.66],[.80,.55]]},passes:[[1,2,.18,.27],[2,1,.48,.57],[1,3,.70,.79]]},
-  pnr:{paths:{1:[[.50,.42],[.50,.34],[.58,.48],[.62,.58],[.50,.72]],2:[[.50,.52],[.56,.52],[.52,.46],[.48,.38],[.44,.30]],3:[[.18,.56],[.18,.48]],4:[[.82,.56],[.82,.48]],5:[[.075,.76],[.20,.68],[.34,.58]]},passes:[[1,2,.57,.68]]},
+  motion:{paths:{1:[[.50,.88],[.50,.78],[.30,.62],[.18,.62],[.18,.48]],2:[[.18,.62],[.30,.52],[.50,.42],[.66,.42]],3:[[.82,.62],[.70,.52],[.66,.42],[.82,.62]],4:[[.06,.35],[.06,.48],[.18,.62],[.06,.48]],5:[[.94,.35],[.94,.48],[.82,.62],[.94,.48]]},passes:[[1,2,.20,.29],[2,3,.52,.61],[3,5,.73,.82]]},
+  horns:{paths:{1:[[.50,.86],[.50,.76],[.34,.62],[.18,.62],[.12,.42]],2:[[.34,.48],[.42,.38],[.50,.27],[.50,.15]],3:[[.66,.48],[.58,.38],[.50,.27],[.50,.15]],4:[[.08,.62],[.08,.52],[.34,.48]],5:[[.92,.62],[.92,.52],[.66,.48]]},passes:[[1,2,.18,.27],[2,1,.48,.57],[1,3,.70,.79]]},
+  pnr:{paths:{1:[[.50,.86],[.50,.76],[.58,.65],[.62,.54],[.50,.30]],2:[[.50,.62],[.56,.62],[.52,.55],[.48,.42],[.44,.30]],3:[[.12,.60],[.12,.48]],4:[[.88,.60],[.88,.48]],5:[[.50,.35],[.78,.42],[.88,.60]]},passes:[[1,2,.57,.68]]},
   givego:{paths:{1:[[.50,.78],[.50,.68],[.16,.62],[.16,.50],[.50,.28]],2:[[.16,.62],[.16,.53],[.50,.28]],3:[[.84,.62],[.84,.50]],4:[[.10,.86],[.10,.74]],5:[[.90,.86],[.90,.74]]},passes:[[1,2,.22,.32],[2,1,.62,.72]]},
   ucla:{paths:{1:[[.50,.78],[.50,.68],[.16,.62],[.50,.43],[.50,.25]],2:[[.16,.62],[.30,.54],[.50,.43]],3:[[.84,.62],[.84,.49]],4:[[.34,.43],[.50,.34],[.50,.18]],5:[[.66,.43],[.66,.54]]},passes:[[1,2,.18,.27],[2,1,.54,.64]]},
   floppy:{paths:{1:[[.50,.78],[.50,.68],[.34,.43]],2:[[.12,.86],[.12,.68],[.34,.43],[.50,.30]],3:[[.88,.86],[.88,.68],[.66,.43],[.50,.30]],4:[[.34,.43],[.42,.34],[.50,.25]],5:[[.66,.43],[.58,.34],[.50,.25]]},passes:[[1,4,.20,.30],[4,2,.58,.68]]},
@@ -522,12 +544,7 @@ function presetStrokes(code){
  };
  const actionAliases={princeton:'ucla',spain:'pnr',hornstwist:'horns',stagger:'floppy',zipperentry:'zipper',baselineTriangle:'baselinebox',boxcross:'box',stackslip:'stack',hornslate:'horns',cornerclear:'need3'};
  const a=actions[code]||actions[actionAliases[code]]||actions.motion;
- Object.entries(a.paths).forEach(([n,pts])=>{
-  const playerNum=Number(n),team=code==='amoeba'?'defense':'offense';
-  const startPoint=team==='defense'?(defForms[playerNum-1]||pts[0]):(forms[playerNum-1]||pts[0]);
-  const route=[startPoint,...pts.slice(1)];
-  out.push(A(playerNum,route,team));
- });
+ Object.entries(a.paths).forEach(([n,pts])=>out.push(A(Number(n),pts,code==='amoeba'?'defense':'offense')));
  // Ball events are separate timed passes. Animation resolves the exact moving locations of passer/receiver.
  a.passes.forEach(([from,to,t0,t1])=>{const st=P(from,to,t0,t1),a0=forms[from-1],b0=forms[to-1];st.points=[courtPoint(a0),courtPoint(b0)];out.push(st)});
  out.push({tool:'ball',player:1,points:[courtPoint(forms[0])]});
@@ -554,17 +571,16 @@ function animatePlay(){
  const at=(path,t)=>{if(!path||!path.total)return null;let d=Math.max(0,Math.min(1,t))*path.total;for(const seg of path.segments){if(d<=seg.len){const q=seg.len?d/seg.len:0;return{x:seg.a.x+(seg.b.x-seg.a.x)*q,y:seg.a.y+(seg.b.y-seg.a.y)*q};}d-=seg.len;}return path.segments[path.segments.length-1].b;};
  const position=(team,n,t)=>{const key=team+n,p=paths[key],start=starts[key];if(!p||!start)return start||{x:.5,y:.5};return at(p,t)||start;};
  const passes=playStrokes.filter(st=>st.tool==='pass'&&st.player&&st.receiver).sort((a,b)=>(a.t0||0)-(b.t0||0));
- const ballMarker=playStrokes.find(st=>st.tool==='ball');
- const duration=9000,initial=Number(ballMarker?.player||1),initialTeam=ballMarker?.team||'offense';playAnimStart=performance.now();
+ const duration=9000,initial=Number(playStrokes.find(st=>st.tool==='ball')?.player||1);playAnimStart=performance.now();
  const frame=now=>{const t=Math.min(1,(now-playAnimStart)/duration);drawPlay({hideMarkers:true,hideBall:true});const ctx=c.getContext('2d');
   const current={};Object.keys(starts).forEach(k=>{const team=k.startsWith('defense')?'defense':'offense',n=Number(k.replace(/\D/g,''));current[k]=position(team,n,t);drawMarker(ctx,current[k],n,team==='defense'?'#dc2626':'#07558a',c);});
-  let carrier=initial,carrierTeam=initialTeam,ballPos=current[carrierTeam+carrier]||starts[carrierTeam+carrier]||ballMarker?.points?.[0];
+  let carrier=initial,ballPos=current['offense'+carrier]||starts['offense'+carrier];
   for(const pass of passes){const t0=Number(pass.t0??.25),t1=Number(pass.t1??t0+.12),from=Number(pass.player),to=Number(pass.receiver);if(t<t0)break;
-   const a=position(pass.team||'offense',from,t0),b=position(pass.team||'offense',to,t1);
+   const a=position('offense',from,t0),b=position('offense',to,t1);
    if(t<t1){const q=Math.max(0,Math.min(1,(t-t0)/(t1-t0)));ballPos={x:a.x+(b.x-a.x)*q,y:a.y+(b.y-a.y)*q};carrier=null;break;}
-   carrier=to;carrierTeam=pass.team||'offense';ballPos=current[carrierTeam+carrier]||position(carrierTeam,carrier,t);
+   carrier=to;ballPos=current['offense'+carrier]||position('offense',carrier,t);
   }
-  if(carrier!==null)ballPos=current[carrierTeam+carrier]||position(carrierTeam,carrier,t);
+  if(carrier!==null)ballPos=current['offense'+carrier]||position('offense',carrier,t);
   if(ballPos)drawBall(ctx,{x:ballPos.x+.022,y:ballPos.y-.018},c);
   if(t<1)playAnimFrame=requestAnimationFrame(frame);else playAnimFrame=null;
  };
