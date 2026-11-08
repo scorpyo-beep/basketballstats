@@ -37,9 +37,12 @@ input,select,textarea{width:100%;min-width:0;border:1px solid #d1d9e0;border-rad
 
 /* Coaches play pad */
 .playTools{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.playTools .wide{grid-column:1/-1}.courtWrap{width:100%;overflow:hidden;border-radius:10px;background:#e9f2e8;border:2px solid #b7c9b5;touch-action:none}.courtCanvas{touch-action:none;display:block;width:100%;height:auto;touch-action:none;cursor:crosshair}.playBtns{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-top:7px}.playBtns button,.playTools button{border:0;border-radius:8px;padding:9px 5px;font-size:11px;font-weight:900}.playList{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.playItem{border:1px solid var(--line);border-radius:9px;padding:8px;background:#f8fafc;min-width:0}.playItem b{display:block;font-size:11px}.playItem small{display:block;color:#64748b;font-size:9px;margin:3px 0 6px}.playItem button{width:100%;border:0;border-radius:7px;padding:7px;background:var(--blue);color:white;font-size:10px;font-weight:900}.playHint{font-size:10px;line-height:1.45;color:#64748b}
-.courtWrap.board-fullscreen{position:fixed;inset:0;z-index:9999;background:#e9f2e8;border:0;border-radius:0;display:flex;align-items:center;justify-content:center;padding:12px;overflow:auto}
-.courtWrap.board-fullscreen .courtCanvas{width:auto;height:auto;max-width:100%;max-height:calc(100dvh - 24px);object-fit:contain}
-body.board-lock{overflow:hidden}
+.courtWrap.board-fullscreen{position:fixed;inset:0;z-index:99999;background:#e9f2e8;border:0;border-radius:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:calc(12px + env(safe-area-inset-top)) 12px calc(12px + env(safe-area-inset-bottom));overflow:hidden;width:100vw;height:100dvh;box-sizing:border-box}
+.courtWrap.board-fullscreen .courtCanvas{display:block;width:min(calc(100vw - 24px),calc((100dvh - 64px)*1.060606));height:auto;max-width:none;max-height:calc(100dvh - 64px);object-fit:contain;flex:0 1 auto}
+.courtExitBtn{display:none;position:absolute;z-index:2;top:calc(10px + env(safe-area-inset-top));right:calc(10px + env(safe-area-inset-right));border:0;border-radius:999px;background:#111827;color:#fff;padding:10px 14px;font-size:12px;font-weight:900;box-shadow:0 2px 10px #0004}
+.courtWrap.board-fullscreen .courtExitBtn{display:block}
+.courtWrap.board-fullscreen #courtLegend{display:none!important}
+body.board-lock{overflow:hidden;touch-action:none}
 @media(min-width:761px){.playLayout{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(260px,1fr);gap:10px;align-items:start}.playList{grid-template-columns:1fr}}
 
 </style>
@@ -108,9 +111,9 @@ body.board-lock{overflow:hidden}
 <section id="plays" class="hidden">
  <div class="card"><h2>📋 Coaches Court Pad</h2><p class="playHint">CUSTOM PLAY STEPS: 1) Add Offense/Defense and tap the court once for each numbered player. 2) Select a player number and team. 3) Choose Draw Player Route and drag that player's path. Repeat for every moving player. 4) Choose Pass From/To, then Draw Pass and drag the pass line. 5) Set Ball, tap the player who starts with it, then Animate. Presets are read-only.</p>
  <div class="playLayout"><div>
-  <div class="courtWrap" id="courtWrap"><canvas id="playCanvas" class="courtCanvas" width="700" height="660" aria-label="Scaled basketball half-court drawing pad"></canvas>
-<div style="display:flex;gap:12px;flex-wrap:wrap;font-size:12px;margin:6px 0 10px;color:#475569"><span>🔵 Offense 1–5</span><span>🔴 Defense 1–5</span><span>🟠 Ball</span><span>🟢 Pass path</span><span>🟡 Player route</span></div></div>
-  <div class="playBtns"><button class="blue" onclick="toggleBoardFullscreen()">⛶ Full Screen</button><button class="green" onclick="startCustomPlay()">＋ New Custom Board</button><button class="blue" onclick="setPlayTool('draw')">✏️ Draw</button><button class="blue" onclick="setPlayTool('arrow')">➡ Arrow</button><button class="orange" onclick="setPlayTool('erase')">⌫ Erase</button><button onclick="undoPlayStroke()">↶ Undo</button><button onclick="clearPlayCourt()" class="red">Clear Court</button><button class="green" onclick="saveCustomPlay()">💾 Save Play</button></div>
+  <div class="courtWrap" id="courtWrap"><button type="button" id="courtExitBtn" class="courtExitBtn" onclick="toggleBoardFullscreen()">✕ Exit Full Screen</button><canvas id="playCanvas" class="courtCanvas" width="700" height="660" aria-label="Scaled basketball half-court drawing pad"></canvas>
+<div id="courtLegend" style="display:flex;gap:12px;flex-wrap:wrap;font-size:12px;margin:6px 0 10px;color:#475569"><span>🔵 Offense 1–5</span><span>🔴 Defense 1–5</span><span>🟠 Ball</span><span>🟢 Pass path</span><span>🟡 Player route</span></div></div>
+  <div class="playBtns"><button class="blue" id="courtFullscreenBtn" onclick="toggleBoardFullscreen()">⛶ Full Screen</button><button class="green" onclick="startCustomPlay()">＋ New Custom Board</button><button class="blue" onclick="setPlayTool('draw')">✏️ Draw</button><button class="blue" onclick="setPlayTool('arrow')">➡ Arrow</button><button class="orange" onclick="setPlayTool('erase')">⌫ Erase</button><button onclick="undoPlayStroke()">↶ Undo</button><button onclick="clearPlayCourt()" class="red">Clear Court</button><button class="green" onclick="saveCustomPlay()">💾 Save Play</button></div>
   <div class="playTools" style="margin-top:6px"><div><label>Player number for route</label><select id="playMarkerNumber"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option></select></div><div><label>Route belongs to</label><select id="playRouteTeam"><option value="offense">Offense</option><option value="defense">Defense</option></select></div></div>
   <div class="playBtns"><button class="blue" onclick="setPlayTool('move')">✋ Move Players</button><button class="blue" onclick="setPlayTool('offense')">🔵 Add Offense</button><button class="orange" onclick="setPlayTool('defense')">🔴 Add Defense</button><button class="blue" onclick="setPlayTool('playerRoute')">〰 Draw Player Route</button><button class="green" onclick="setPlayTool('pass')">🏀 Draw Pass</button><button onclick="setPlayTool('ball')">🟠 Set Ball</button></div>
   <div class="playTools"><div><label>Pass from</label><select id="playPassFrom"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></div><div><label>Pass to</label><select id="playPassTo"><option>2</option><option>1</option><option>3</option><option>4</option><option>5</option></select></div></div>
@@ -460,10 +463,13 @@ function renderPresetSelect(){const cat=document.getElementById('playCategory').
 function toggleBoardFullscreen(){
  const wrap=document.getElementById('courtWrap');if(!wrap)return;
  const on=!wrap.classList.contains('board-fullscreen');
- wrap.classList.toggle('board-fullscreen',on);document.body.classList.toggle('board-lock',on);
- const btn=[...document.querySelectorAll('button')].find(b=>b.textContent.includes('Full Screen')||b.textContent.includes('Exit Full Screen'));
+ stopPlayAnimation();
+ wrap.classList.toggle('board-fullscreen',on);
+ document.body.classList.toggle('board-lock',on);
+ const btn=document.getElementById('courtFullscreenBtn')||[...document.querySelectorAll('.playBtns button')].find(b=>b.getAttribute('onclick')==='toggleBoardFullscreen()');
  if(btn)btn.textContent=on?'⤢ Exit Full Screen':'⛶ Full Screen';
- setTimeout(()=>{const c=document.getElementById('playCanvas');if(c)drawPlay()},80);
+ const exit=document.getElementById('courtExitBtn');if(exit)exit.setAttribute('aria-hidden',on?'false':'true');
+ requestAnimationFrame(()=>{drawPlay();});
 }
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){const w=document.getElementById('courtWrap');if(w&&w.classList.contains('board-fullscreen'))toggleBoardFullscreen()}});
 
@@ -477,7 +483,7 @@ function presetStrokes(code){
  const P=(from,to,t0,t1)=>({tool:'pass',player:from,receiver:to,t0,t1,color:'#16a34a',points:[{x:0,y:0},{x:0,y:0}]});
  // All formation coordinates below use x=0 left sideline, y=0 basket baseline, y=1 half court.
  const F={
-  motion:[[.50,.88],[.18,.62],[.82,.62],[.06,.35],[.94,.35]],
+  motion:[[.50,.88],[.82,.62],[.18,.62],[.06,.35],[.94,.35]],
   horns:[[.50,.86],[.34,.48],[.66,.48],[.08,.35],[.92,.35]],
   pnr:[[.50,.86],[.50,.62],[.12,.60],[.88,.60],[.50,.35]],
   givego:[[.50,.78],[.16,.62],[.84,.62],[.10,.86],[.90,.86]],
@@ -517,10 +523,17 @@ function presetStrokes(code){
  };
  const forms=F[code]||F.motion,out=[];forms.forEach((p,i)=>out.push(M(i+1,p)));
  const defensive=['man','zone23','zone32','zone131','fullman','boxone','amoeba'].includes(code);
- if(defensive){const D=code==='amoeba'?[[.50,.76],[.25,.62],[.75,.62],[.50,.43],[.50,.22]]:code==='zone23'?[[.30,.42],[.70,.42],[.16,.29],[.84,.29],[.50,.23]]:code==='zone32'?[[.16,.42],[.50,.42],[.84,.42],[.34,.27],[.66,.27]]:[[.20,.40],[.38,.34],[.62,.34],[.80,.40],[.50,.22]];D.forEach((p,i)=>out.push(M(i+1,p,'defense')));}
+ const D=code==='amoeba'?[[.50,.76],[.25,.62],[.75,.62],[.50,.43],[.50,.22]]
+  :code==='zone23'?[[.30,.76],[.70,.76],[.16,.48],[.84,.48],[.50,.40]]
+  :code==='zone32'?[[.16,.76],[.50,.76],[.84,.76],[.34,.43],[.66,.43]]
+  :code==='zone131'?[[.50,.80],[.18,.57],[.50,.57],[.82,.57],[.50,.24]]
+  :code==='boxone'?[[.50,.82],[.28,.58],[.72,.58],[.28,.30],[.72,.30]]
+  :code==='fullman'?[[.50,.86],[.24,.72],[.76,.72],[.36,.57],[.64,.57]]
+  :[[.50,.78],[.18,.62],[.82,.62],[.25,.34],[.75,.34]];
+ if(defensive)D.forEach((p,i)=>out.push(M(i+1,p,'defense')));
  // Each action is a coordinated sequence, not five unrelated straight lines.
  const actions={
-  motion:{paths:{1:[[.50,.88],[.50,.78],[.30,.62],[.18,.62],[.18,.48]],2:[[.18,.62],[.30,.52],[.50,.42],[.66,.42]],3:[[.82,.62],[.70,.52],[.66,.42],[.82,.62]],4:[[.06,.35],[.06,.48],[.18,.62],[.06,.48]],5:[[.94,.35],[.94,.48],[.82,.62],[.94,.48]]},passes:[[1,2,.20,.29],[2,3,.52,.61],[3,5,.73,.82]]},
+  motion:{paths:{1:[[.50,.88],[.50,.78],[.70,.62],[.82,.62],[.82,.48]],2:[[.82,.62],[.70,.52],[.50,.42],[.34,.42]],3:[[.18,.62],[.30,.52],[.34,.42],[.18,.62]],4:[[.06,.35],[.06,.48],[.18,.62],[.06,.48]],5:[[.94,.35],[.94,.48],[.82,.62],[.94,.48]]},passes:[[1,2,.20,.29],[2,3,.52,.61],[3,5,.73,.82]]},
   horns:{paths:{1:[[.50,.86],[.50,.76],[.34,.62],[.18,.62],[.12,.42]],2:[[.34,.48],[.42,.38],[.50,.27],[.50,.15]],3:[[.66,.48],[.58,.38],[.50,.27],[.50,.15]],4:[[.08,.62],[.08,.52],[.34,.48]],5:[[.92,.62],[.92,.52],[.66,.48]]},passes:[[1,2,.18,.27],[2,1,.48,.57],[1,3,.70,.79]]},
   pnr:{paths:{1:[[.50,.86],[.50,.76],[.58,.65],[.62,.54],[.50,.30]],2:[[.50,.62],[.56,.62],[.52,.55],[.48,.42],[.44,.30]],3:[[.12,.60],[.12,.48]],4:[[.88,.60],[.88,.48]],5:[[.50,.35],[.78,.42],[.88,.60]]},passes:[[1,2,.57,.68]]},
   givego:{paths:{1:[[.50,.78],[.50,.68],[.16,.62],[.16,.50],[.50,.28]],2:[[.16,.62],[.16,.53],[.50,.28]],3:[[.84,.62],[.84,.50]],4:[[.10,.86],[.10,.74]],5:[[.90,.86],[.90,.74]]},passes:[[1,2,.22,.32],[2,1,.62,.72]]},
@@ -540,11 +553,24 @@ function presetStrokes(code){
   need3:{paths:{1:[[.50,.78],[.50,.68],[.34,.43]],2:[[.16,.62],[.30,.52],[.16,.38]],3:[[.84,.62],[.84,.42]],4:[[.34,.43],[.50,.34],[.66,.43]],5:[[.66,.43],[.66,.55]]},passes:[[1,2,.45,.55],[2,5,.72,.82]]},
   protect:{paths:{1:[[.50,.78],[.50,.68],[.50,.62]],2:[[.16,.62],[.16,.54]],3:[[.84,.62],[.84,.54]],4:[[.34,.43],[.34,.52]],5:[[.66,.43],[.66,.52]]},passes:[[1,2,.28,.38],[2,1,.68,.78]]},
   triangle:{paths:{1:[[.50,.82],[.50,.72],[.70,.68],[.84,.52],[.70,.68]],2:[[.82,.78],[.82,.68],[.72,.58],[.50,.48]],3:[[.82,.52],[.68,.46],[.52,.34]],4:[[.18,.52],[.30,.42],[.50,.34],[.18,.52]],5:[[.42,.30],[.50,.22],[.58,.30]]},passes:[[1,3,.18,.28],[3,5,.55,.66]]},
+  man:{paths:{1:[[.50,.78],[.50,.70],[.42,.62]],2:[[.18,.62],[.25,.58],[.32,.52]],3:[[.82,.62],[.75,.58],[.68,.52]],4:[[.25,.34],[.30,.42],[.38,.48]],5:[[.75,.34],[.70,.42],[.62,.48]]},passes:[]},
+  zone23:{paths:{1:[[.30,.76],[.38,.72],[.45,.68]],2:[[.70,.76],[.62,.72],[.55,.68]],3:[[.16,.48],[.22,.44],[.28,.40]],4:[[.84,.48],[.78,.44],[.72,.40]],5:[[.50,.40],[.50,.32],[.50,.25]]},passes:[]},
+  zone32:{paths:{1:[[.16,.76],[.22,.72],[.28,.68]],2:[[.50,.76],[.50,.70],[.50,.64]],3:[[.84,.76],[.78,.72],[.72,.68]],4:[[.34,.43],[.40,.38],[.45,.34]],5:[[.66,.43],[.60,.38],[.55,.34]]},passes:[]},
+  zone131:{paths:{1:[[.50,.80],[.50,.74],[.50,.68]],2:[[.18,.57],[.24,.54],[.30,.50]],3:[[.50,.57],[.50,.50],[.50,.43]],4:[[.82,.57],[.76,.54],[.70,.50]],5:[[.50,.24],[.50,.30],[.50,.36]]},passes:[]},
+  fullman:{paths:{1:[[.50,.86],[.50,.80],[.50,.74]],2:[[.24,.72],[.30,.68],[.36,.64]],3:[[.76,.72],[.70,.68],[.64,.64]],4:[[.36,.57],[.42,.54],[.46,.50]],5:[[.64,.57],[.58,.54],[.54,.50]]},passes:[]},
+  boxone:{paths:{1:[[.50,.82],[.50,.78],[.50,.72]],2:[[.28,.58],[.34,.54],[.40,.50]],3:[[.72,.58],[.66,.54],[.60,.50]],4:[[.28,.30],[.34,.34],[.40,.38]],5:[[.72,.30],[.66,.34],[.60,.38]]},passes:[]},
   amoeba:{paths:{1:[[.50,.80],[.50,.72],[.50,.60]],2:[[.22,.60],[.34,.52],[.50,.43]],3:[[.78,.60],[.66,.52],[.50,.43]],4:[[.50,.43],[.35,.30],[.20,.24]],5:[[.50,.22],[.68,.30],[.82,.42]]},passes:[]}
  };
  const actionAliases={princeton:'ucla',spain:'pnr',hornstwist:'horns',stagger:'floppy',zipperentry:'zipper',baselineTriangle:'baselinebox',boxcross:'box',stackslip:'stack',hornslate:'horns',cornerclear:'need3'};
  const a=actions[code]||actions[actionAliases[code]]||actions.motion;
- Object.entries(a.paths).forEach(([n,pts])=>out.push(A(Number(n),pts,code==='amoeba'?'defense':'offense')));
+ Object.entries(a.paths).forEach(([n,pts])=>{
+  const team=defensive?'defense':'offense',base=team==='defense'?D:forms,start=base[Number(n)-1]||pts[0];
+  // Route paths are authored as normalized court coordinates. Translate each route so
+  // its first point exactly meets that player's actual starting marker in this formation.
+  const dx=start[0]-pts[0][0],dy=start[1]-pts[0][1];
+  const aligned=pts.map(q=>[Math.max(.015,Math.min(.985,q[0]+dx)),Math.max(.015,Math.min(.985,q[1]+dy))]);
+  out.push(A(Number(n),aligned,team));
+ });
  // Ball events are separate timed passes. Animation resolves the exact moving locations of passer/receiver.
  a.passes.forEach(([from,to,t0,t1])=>{const st=P(from,to,t0,t1),a0=forms[from-1],b0=forms[to-1];st.points=[courtPoint(a0),courtPoint(b0)];out.push(st)});
  out.push({tool:'ball',player:1,points:[courtPoint(forms[0])]});
