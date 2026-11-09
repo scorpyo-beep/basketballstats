@@ -624,29 +624,94 @@ function savePlayVariation(){
 }
 function stopPlayAnimation(){if(playAnimFrame)cancelAnimationFrame(playAnimFrame);playAnimFrame=null;drawPlay()}
 function animatePlay(){
- stopPlayAnimation();const c=document.getElementById('playCanvas');if(!c)return;
- const routes=playStrokes.filter(st=>st.player&&st.tool==='arrow'&&st.points?.length>1);
- if(!routes.length)return toast('Load a preset play or draw player routes first');
- const makePath=st=>{let total=0,segments=[];for(let i=1;i<st.points.length;i++){const a=st.points[i-1],b=st.points[i],len=Math.hypot((b.x-a.x)*c.width,(b.y-a.y)*c.height);segments.push({a,b,len});total+=len;}return{segments,total};};
- const paths={};routes.forEach(st=>paths[(st.team||'offense')+st.player]=makePath(st));
- const markers=playStrokes.filter(st=>/^(offense|defense)[1-5]$/.test(st.tool));const starts={};markers.forEach(st=>starts[st.tool]=st.points[0]);
- const at=(path,t)=>{if(!path||!path.total)return null;let d=Math.max(0,Math.min(1,t))*path.total;for(const seg of path.segments){if(d<=seg.len){const q=seg.len?d/seg.len:0;return{x:seg.a.x+(seg.b.x-seg.a.x)*q,y:seg.a.y+(seg.b.y-seg.a.y)*q};}d-=seg.len;}return path.segments[path.segments.length-1].b;};
- const position=(team,n,t)=>{const key=team+n,p=paths[key],start=starts[key];if(!p||!start)return start||{x:.5,y:.5};return at(p,t)||start;};
- const passes=playStrokes.filter(st=>st.tool==='pass'&&st.player&&st.receiver).sort((a,b)=>(a.t0||0)-(b.t0||0));
- const duration=9000,initial=Number(playStrokes.find(st=>st.tool==='ball')?.player||1);playAnimStart=performance.now();
- const frame=now=>{const t=Math.min(1,(now-playAnimStart)/duration);drawPlay({hideMarkers:true,hideBall:true});const ctx=c.getContext('2d');
-  const current={};Object.keys(starts).forEach(k=>{const team=k.startsWith('defense')?'defense':'offense',n=Number(k.replace(/\D/g,''));current[k]=position(team,n,t);drawMarker(ctx,current[k],n,team==='defense'?'#dc2626':'#07558a',c);});
-  let carrier=initial,ballPos=current['offense'+carrier]||starts['offense'+carrier];
-  for(const pass of passes){const t0=Number(pass.t0??.25),t1=Number(pass.t1??t0+.12),from=Number(pass.player),to=Number(pass.receiver);if(t<t0)break;
-   const a=position('offense',from,t0),b=position('offense',to,t1);
-   if(t<t1){const q=Math.max(0,Math.min(1,(t-t0)/(t1-t0)));ballPos={x:a.x+(b.x-a.x)*q,y:a.y+(b.y-a.y)*q};carrier=null;break;}
-   carrier=to;ballPos=current['offense'+carrier]||position('offense',carrier,t);
+ stopPlayAnimation();
+ const c=document.getElementById('playCanvas');if(!c)return;
+ // Build one independent movement path for every numbered player. Player-route
+ // strokes are stored as arrow strokes with a player/team, while plain arrows
+ // are coaching annotations and must not animate a player.
+ const markers=playStrokes.filter(st=>/^(offense|defense)[1-5]$/.test(st.tool));
+ const starts={};markers.forEach(st=>{starts[st.tool]=st.points?.[0]||{x:.5,y:.5}});
+ const routeStrokes=playStrokes.filter(st=>(st.tool==='arrow'||st.tool==='playerRoute')&&Number(st.player)>=1&&Number(st.player)<=5&&st.points?.length>1);
+ if(!routeStrokes.length)return toast('Draw or load player routes before animating');
+ const routeGroups={};
+ routeStrokes.forEach(st=>{
+  const team=st.team==='defense'?'defense':'offense',key=team+Number(st.player);
+  (routeGroups[key]??=[]).push(st.points);
+ });
+ const paths={};
+ Object.entries(routeGroups).forEach(([key,segments])=>{
+  // If a player has more than one route stroke, join them in drawing order.
+  // Avoid duplicating a shared endpoint when the strokes touch.
+  const pts=[];
+  segments.forEach(seg=>{
+   const clean=seg.filter(q=>Number.isFinite(q.x)&&Number.isFinite(q.y));
+   if(!clean.length)return;
+   if(!pts.length){pts.push(...clean);return;}
+   const last=pts[pts.length-1],first=clean[0],d=Math.hypot(last.x-first.x,last.y-first.y);
+   if(d<.08)pts.push(...clean.slice(1));else pts.push(...clean);
+  });
+  if(pts.length>1)paths[key]=pts;
+ });
+ const movingKeys=Object.keys(paths);
+ if(!movingKeys.length)return toast('No valid player routes found');
+ const pathData={};
+ Object.entries(paths).forEach(([key,pts])=>{
+  let total=0;const segs=[];
+  for(let i=1;i<pts.length;i++){
+   const a=pts[i-1],b=pts[i],len=Math.hypot((b.x-a.x)*c.width,(b.y-a.y)*c.height);
+   if(len>.01){segs.push({a,b,len});total+=len;}
   }
-  if(carrier!==null)ballPos=current['offense'+carrier]||position('offense',carrier,t);
+  if(total>0)pathData[key]={segs,total};
+ });
+ const at=(path,t)=>{
+  if(!path||!path.total)return null;
+  let d=Math.max(0,Math.min(1,t))*path.total;
+  for(const seg of path.segs){
+   if(d<=seg.len){const q=seg.len?d/seg.len:0;return{x:seg.a.x+(seg.b.x-seg.a.x)*q,y:seg.a.y+(seg.b.y-seg.a.y)*q};}
+   d-=seg.len;
+  }
+  const last=path.segs[path.segs.length-1].b;return{x:last.x,y:last.y};
+ };
+ const position=(key,t)=>{
+  const path=pathData[key],start=starts[key];
+  if(!path)return start||{x:.5,y:.5};
+  // Smooth acceleration/deceleration while preserving each player's full route.
+  const eased=t*t*(3-2*t);
+  return at(path,eased)||start||{x:.5,y:.5};
+ };
+ const passes=playStrokes.filter(st=>st.tool==='pass'&&Number(st.player)>=1&&Number(st.receiver)>=1)
+  .sort((a,b)=>Number(a.t0||0)-Number(b.t0||0));
+ const duration=9000,initial=Number(playStrokes.find(st=>st.tool==='ball')?.player||1);
+ playAnimStart=performance.now();
+ const frame=now=>{
+  const t=Math.min(1,(now-playAnimStart)/duration);
+  drawPlay({hideMarkers:true,hideBall:true});
+  const ctx=c.getContext('2d'),current={};
+  // Animate every player marker independently on its own route, not just the
+  // current ball carrier. Players without a route remain at their start spot.
+  markers.forEach(st=>{
+   const key=st.tool,n=Number(key.slice(-1)),team=key.startsWith('defense')?'defense':'offense';
+   const pos=position(key,t);current[key]=pos;
+   drawMarker(ctx,pos,n,team==='defense'?'#dc2626':'#07558a',c);
+  });
+  let carrier=initial,ballPos=current['offense'+carrier]||starts['offense'+carrier]||{x:.5,y:.5};
+  for(const pass of passes){
+   const t0=Math.max(0,Math.min(1,Number(pass.t0??.25))),t1=Math.max(t0+.001,Math.min(1,Number(pass.t1??t0+.12)));
+   const from=Number(pass.player),to=Number(pass.receiver);
+   if(t<t0)break;
+   const a=position('offense'+from,t0),b=position('offense'+to,t1);
+   if(t<t1){
+    const q=Math.max(0,Math.min(1,(t-t0)/(t1-t0)));
+    ballPos={x:a.x+(b.x-a.x)*q,y:a.y+(b.y-a.y)*q};carrier=null;break;
+   }
+   carrier=to;ballPos=current['offense'+carrier]||position('offense'+carrier,t);
+  }
+  if(carrier!==null)ballPos=current['offense'+carrier]||position('offense'+carrier,t)||ballPos;
   if(ballPos)drawBall(ctx,{x:ballPos.x+.022,y:ballPos.y-.018},c);
   if(t<1)playAnimFrame=requestAnimationFrame(frame);else playAnimFrame=null;
  };
- playAnimFrame=requestAnimationFrame(frame);toast('Running coordinated player movements and passes');
+ playAnimFrame=requestAnimationFrame(frame);
+ toast('All routed players are moving together; the ball follows the timed passes');
 }
 function drawMarker(ctx,pos,label,color,c){const px=pos.x*c.width,py=pos.y*c.height;ctx.beginPath();ctx.arc(px,py,23,0,Math.PI*2);ctx.fillStyle=color;ctx.fill();ctx.lineWidth=3;ctx.strokeStyle='#fff';ctx.stroke();ctx.fillStyle='#fff';ctx.font='bold 23px system-ui';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(label,px,py)}
 function drawBall(ctx,pos,c){const px=pos.x*c.width,py=pos.y*c.height;ctx.beginPath();ctx.arc(px,py,12,0,Math.PI*2);ctx.fillStyle='#f97316';ctx.fill();ctx.lineWidth=2;ctx.strokeStyle='#7c2d12';ctx.stroke();ctx.beginPath();ctx.moveTo(px-8,py);ctx.lineTo(px+8,py);ctx.moveTo(px,py-8);ctx.lineTo(px,py+8);ctx.stroke()}
