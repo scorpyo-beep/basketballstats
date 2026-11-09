@@ -37,12 +37,18 @@ input,select,textarea{width:100%;min-width:0;border:1px solid #d1d9e0;border-rad
 
 /* Coaches play pad */
 .playTools{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.playTools .wide{grid-column:1/-1}.courtWrap{width:100%;overflow:hidden;border-radius:10px;background:#e9f2e8;border:2px solid #b7c9b5;touch-action:none}.courtCanvas{touch-action:none;display:block;width:100%;height:auto;touch-action:none;cursor:crosshair}.playBtns{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-top:7px}.playBtns button,.playTools button{border:0;border-radius:8px;padding:9px 5px;font-size:11px;font-weight:900}.playList{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.playItem{border:1px solid var(--line);border-radius:9px;padding:8px;background:#f8fafc;min-width:0}.playItem b{display:block;font-size:11px}.playItem small{display:block;color:#64748b;font-size:9px;margin:3px 0 6px}.playItem button{width:100%;border:0;border-radius:7px;padding:7px;background:var(--blue);color:white;font-size:10px;font-weight:900}.playHint{font-size:10px;line-height:1.45;color:#64748b}
-.courtWrap.board-fullscreen{position:fixed;inset:0;z-index:99999;background:#e9f2e8;border:0;border-radius:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:calc(12px + env(safe-area-inset-top)) 12px calc(12px + env(safe-area-inset-bottom));overflow:hidden;width:100vw;height:100dvh;box-sizing:border-box}
-.courtWrap.board-fullscreen .courtCanvas{display:block;width:min(calc(100vw - 24px),calc((100dvh - 64px)*1.060606));height:auto;max-width:none;max-height:calc(100dvh - 64px);object-fit:contain;flex:0 1 auto}
-.courtExitBtn{display:none;position:absolute;z-index:2;top:calc(10px + env(safe-area-inset-top));right:calc(10px + env(safe-area-inset-right));border:0;border-radius:999px;background:#111827;color:#fff;padding:10px 14px;font-size:12px;font-weight:900;box-shadow:0 2px 10px #0004}
+.courtWrap.board-fullscreen{position:fixed;inset:0;z-index:99999;background:#e9f2e8;border:0;border-radius:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:calc(54px + env(safe-area-inset-top)) 10px calc(174px + env(safe-area-inset-bottom));overflow:hidden;width:100vw;height:100dvh;box-sizing:border-box}
+.courtWrap.board-fullscreen .courtCanvas{display:block;width:min(calc(100vw - 20px),calc((100dvh - 250px)*1.060606));height:auto;max-width:none;max-height:calc(100dvh - 250px);object-fit:contain;flex:0 1 auto}
+.courtExitBtn{display:none;position:absolute;z-index:5;top:calc(10px + env(safe-area-inset-top));right:calc(10px + env(safe-area-inset-right));border:0;border-radius:999px;background:#111827;color:#fff;padding:10px 14px;font-size:12px;font-weight:900;box-shadow:0 2px 10px #0004;min-height:42px}
+.courtFullscreenTools{display:none}
 .courtWrap.board-fullscreen .courtExitBtn{display:block}
+.courtWrap.board-fullscreen .courtFullscreenTools{display:block;position:absolute;z-index:4;left:8px;right:8px;bottom:calc(8px + env(safe-area-inset-bottom));max-width:760px;margin:auto;padding:8px;background:#ffffffed;border:1px solid #b7c9b5;border-radius:13px;box-shadow:0 3px 16px #0003;backdrop-filter:blur(8px)}
+.courtFsSelectors{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:7px}.courtFsSelectors label{font-size:10px;margin:0}.courtFsSelectors select{height:36px;padding:4px 8px;font-size:13px;margin-top:3px}
+.courtFsButtons{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px}.courtFsButtons button{min-width:0;min-height:40px;padding:5px 2px;border:0;border-radius:8px;background:#07558a;color:#fff;font-size:11px;font-weight:900;touch-action:manipulation}.courtFsButtons button:nth-child(5),.courtFsButtons button:nth-child(6){background:#0d6b9f}.courtFsButtons button:nth-child(7){background:#16a34a}.courtFsButtons button:nth-child(8){background:#f97316}.courtFsButtons button:nth-child(9){background:#475569}.courtFsButtons button:nth-child(10){background:#dc2626}.courtFsButtons button:nth-child(11){background:#16a34a}.courtFsButtons button:nth-child(12){background:#64748b}
 .courtWrap.board-fullscreen #courtLegend{display:none!important}
 body.board-lock{overflow:hidden;touch-action:none}
+@media(max-height:650px){.courtWrap.board-fullscreen{padding-top:48px;padding-bottom:140px}.courtWrap.board-fullscreen .courtCanvas{width:min(calc(100vw - 20px),calc((100dvh - 205px)*1.060606));max-height:calc(100dvh - 205px)}.courtWrap.board-fullscreen .courtFullscreenTools{padding:5px}.courtFsButtons button{min-height:34px;font-size:10px}.courtFsSelectors{margin-bottom:4px}.courtFsSelectors select{height:30px}}
+@media(min-width:761px){.courtWrap.board-fullscreen .courtFullscreenTools{left:auto;right:14px;bottom:14px;width:260px}.courtWrap.board-fullscreen{padding-bottom:18px}.courtWrap.board-fullscreen .courtCanvas{width:min(calc(100vw - 300px),calc((100dvh - 30px)*1.060606));max-height:calc(100dvh - 30px)}}
 @media(min-width:761px){.playLayout{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(260px,1fr);gap:10px;align-items:start}.playList{grid-template-columns:1fr}}
 
 </style>
@@ -111,8 +117,12 @@ body.board-lock{overflow:hidden;touch-action:none}
 <section id="plays" class="hidden">
  <div class="card"><h2>📋 Coaches Court Pad</h2><p class="playHint">CUSTOM PLAY STEPS: 1) Add Offense/Defense and tap the court once for each numbered player. 2) Select a player number and team. 3) Choose Draw Player Route and drag that player's path. Repeat for every moving player. 4) Choose Pass From/To, then Draw Pass and drag the pass line. 5) Set Ball, tap the player who starts with it, then Animate. Presets are read-only.</p>
  <div class="playLayout"><div>
-  <div class="courtWrap" id="courtWrap"><button type="button" id="courtExitBtn" class="courtExitBtn" onclick="toggleBoardFullscreen()">✕ Exit Full Screen</button><canvas id="playCanvas" class="courtCanvas" width="700" height="660" aria-label="Scaled basketball half-court drawing pad"></canvas>
-<div id="courtLegend" style="display:flex;gap:12px;flex-wrap:wrap;font-size:12px;margin:6px 0 10px;color:#475569"><span>🔵 Offense 1–5</span><span>🔴 Defense 1–5</span><span>🟠 Ball</span><span>🟢 Pass path</span><span>🟡 Player route</span></div></div>
+  <div class="courtWrap" id="courtWrap"><button type="button" id="courtExitBtn" class="courtExitBtn" onclick="toggleBoardFullscreen()">✕ Exit Board</button><canvas id="playCanvas" class="courtCanvas" width="700" height="660" aria-label="Interactive basketball half-court coaching board"></canvas>
+  <div id="courtFullscreenTools" class="courtFullscreenTools" aria-label="Coaching board tools">
+   <div class="courtFsSelectors"><label>Player <select id="fsPlayerNumber" onchange="syncFullscreenPlayer()"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></label><label>Team <select id="fsPlayerTeam" onchange="syncFullscreenTeam()"><option value="offense">Offense</option><option value="defense">Defense</option></select></label></div>
+   <div class="courtFsButtons"><button onclick="setPlayTool('move')">✋ Move</button><button onclick="setPlayTool('draw')">✏ Draw</button><button onclick="setPlayTool('arrow')">➜ Arrow</button><button onclick="setPlayTool('playerRoute')">〰 Route</button><button onclick="setPlayTool('offense')">🔵 Add O</button><button onclick="setPlayTool('defense')">🔴 Add D</button><button onclick="setPlayTool('pass')">🏀 Pass</button><button onclick="setPlayTool('ball')">🟠 Ball</button><button onclick="undoPlayStroke()">↶ Undo</button><button onclick="clearPlayCourt()">⌫ Clear</button><button onclick="animatePlay()">▶ Play</button><button onclick="stopPlayAnimation()">■ Stop</button></div>
+  </div>
+  <div id="courtLegend" style="display:flex;gap:12px;flex-wrap:wrap;font-size:12px;margin:6px 0 10px;color:#475569"><span>🔵 Offense 1–5</span><span>🔴 Defense 1–5</span><span>🟠 Ball</span><span>🟢 Pass path</span><span>🟡 Player route</span></div></div>
   <div class="playBtns"><button class="blue" id="courtFullscreenBtn" onclick="toggleBoardFullscreen()">⛶ Full Screen</button><button class="green" onclick="startCustomPlay()">＋ New Custom Board</button><button class="blue" onclick="setPlayTool('draw')">✏️ Draw</button><button class="blue" onclick="setPlayTool('arrow')">➡ Arrow</button><button class="orange" onclick="setPlayTool('erase')">⌫ Erase</button><button onclick="undoPlayStroke()">↶ Undo</button><button onclick="clearPlayCourt()" class="red">Clear Court</button><button class="green" onclick="saveCustomPlay()">💾 Save Play</button></div>
   <div class="playTools" style="margin-top:6px"><div><label>Player number for route</label><select id="playMarkerNumber"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option></select></div><div><label>Route belongs to</label><select id="playRouteTeam"><option value="offense">Offense</option><option value="defense">Defense</option></select></div></div>
   <div class="playBtns"><button class="blue" onclick="setPlayTool('move')">✋ Move Players</button><button class="blue" onclick="setPlayTool('offense')">🔵 Add Offense</button><button class="orange" onclick="setPlayTool('defense')">🔴 Add Defense</button><button class="blue" onclick="setPlayTool('playerRoute')">〰 Draw Player Route</button><button class="green" onclick="setPlayTool('pass')">🏀 Draw Pass</button><button onclick="setPlayTool('ball')">🟠 Set Ball</button></div>
@@ -460,14 +470,18 @@ function deleteSavedPlay(id){if(!confirm('Delete this saved play?'))return;playS
 function renderSavedPlays(){const el=document.getElementById('savedPlays'),empty=document.getElementById('noSavedPlays');if(!el)return;el.innerHTML=playSaved.map(p=>`<div class="playItem"><b>${esc(p.name)}</b><small>${esc(p.category||'Custom')}${p.notes?' · '+esc(p.notes):''}</small><button onclick="loadSavedPlay('${esc(p.id)}')">Load Play</button><button style="margin-top:4px;background:#dc2626" onclick="deleteSavedPlay('${esc(p.id)}')">Delete</button></div>`).join('');empty.style.display=playSaved.length?'none':'block'}
 function renderPresetSelect(){const cat=document.getElementById('playCategory').value,sel=document.getElementById('playPreset');sel.innerHTML='<option value="">Choose a preset…</option>'+PRESET_PLAYS[cat].map((p,i)=>`<option value="${i}">${esc(p[0])}</option>`).join('');sel.value='';}
 
+function syncFullscreenPlayer(){const v=document.getElementById('fsPlayerNumber')?.value||'1';const s=document.getElementById('playMarkerNumber');if(s)s.value=v;}
+function syncFullscreenTeam(){const v=document.getElementById('fsPlayerTeam')?.value||'offense';const s=document.getElementById('playRouteTeam');if(s)s.value=v;}
+function syncFullscreenBoardControls(){const n=document.getElementById('fsPlayerNumber'),t=document.getElementById('fsPlayerTeam');if(n)n.value=document.getElementById('playMarkerNumber')?.value||'1';if(t)t.value=document.getElementById('playRouteTeam')?.value||'offense';}
 function toggleBoardFullscreen(){
  const wrap=document.getElementById('courtWrap');if(!wrap)return;
  const on=!wrap.classList.contains('board-fullscreen');
  stopPlayAnimation();
+ if(on)syncFullscreenBoardControls();
  wrap.classList.toggle('board-fullscreen',on);
  document.body.classList.toggle('board-lock',on);
  const btn=document.getElementById('courtFullscreenBtn')||[...document.querySelectorAll('.playBtns button')].find(b=>b.getAttribute('onclick')==='toggleBoardFullscreen()');
- if(btn)btn.textContent=on?'⤢ Exit Full Screen':'⛶ Full Screen';
+ if(btn)btn.textContent=on?'⤢ Exit Board':'⛶ Full Screen';
  const exit=document.getElementById('courtExitBtn');if(exit)exit.setAttribute('aria-hidden',on?'false':'true');
  requestAnimationFrame(()=>{drawPlay();});
 }
@@ -477,64 +491,68 @@ function startCustomPlay(){stopPlayAnimation();presetReadOnly=false;playStrokes=
 function presetStrokes(code){
  // Preset coordinates are normalized to the PLAYING SURFACE, not the whole canvas.
  // This keeps player feet/route points aligned with the painted court on every screen size.
+ // Preset coordinates use the same orientation as the painted court:
+ // y=0 is the basket baseline and y=1 is the half-court line.
  const courtPoint=p=>({x:.055+p[0]*.89,y:.055+p[1]*.89});
  const M=(n,p,team='offense')=>({tool:team+n,color:team==='offense'?'#07558a':'#dc2626',points:[courtPoint(p)]});
  const A=(n,pts,team='offense')=>({tool:'arrow',player:n,team,color:team==='defense'?'#ef4444':'#f59e0b',points:pts.map(courtPoint)});
  const P=(from,to,t0,t1)=>({tool:'pass',player:from,receiver:to,t0,t1,color:'#16a34a',points:[{x:0,y:0},{x:0,y:0}]});
  // All formation coordinates below use x=0 left sideline, y=0 basket baseline, y=1 half court.
  const F={
-  motion:[[.50,.88],[.82,.62],[.18,.62],[.06,.35],[.94,.35]],
-  horns:[[.50,.86],[.34,.48],[.66,.48],[.08,.35],[.92,.35]],
-  pnr:[[.50,.86],[.50,.62],[.12,.60],[.88,.60],[.50,.35]],
-  givego:[[.50,.78],[.16,.62],[.84,.62],[.10,.86],[.90,.86]],
-  ucla:[[.50,.78],[.16,.62],[.84,.62],[.34,.43],[.66,.43]],
-  floppy:[[.50,.78],[.12,.86],[.88,.86],[.34,.43],[.66,.43]],
-  box:[[.50,.78],[.34,.43],[.66,.43],[.25,.70],[.75,.70]],
-  flex:[[.50,.78],[.16,.62],[.84,.62],[.34,.43],[.66,.43]],
-  baselinebox:[[.50,.78],[.34,.43],[.66,.43],[.25,.70],[.75,.70]],
-  stack:[[.50,.78],[.43,.67],[.43,.57],[.57,.67],[.57,.57]],
-  sidelinebox:[[.50,.78],[.16,.62],[.84,.62],[.34,.43],[.66,.43]],
-  zipper:[[.50,.78],[.16,.62],[.84,.62],[.34,.43],[.66,.43]],
-  press14:[[.50,.78],[.16,.62],[.84,.62],[.34,.43],[.66,.43]],
-  press212:[[.50,.78],[.16,.62],[.84,.62],[.34,.43],[.66,.43]],
-  diamond:[[.50,.78],[.30,.64],[.70,.64],[.42,.46],[.58,.46]],
-  twoforone:[[.50,.78],[.16,.62],[.84,.62],[.34,.43],[.66,.43]],
-  ato:[[.50,.78],[.16,.62],[.84,.62],[.34,.43],[.66,.43]],
-  need3:[[.50,.78],[.16,.62],[.84,.62],[.34,.43],[.66,.43]],
-  protect:[[.50,.78],[.16,.62],[.84,.62],[.34,.43],[.66,.43]],
-  princeton:[[.50,.82],[.16,.62],[.84,.62],[.34,.43],[.66,.43]],
-  spain:[[.50,.86],[.50,.62],[.12,.60],[.88,.60],[.50,.35]],
-  hornstwist:[[.50,.86],[.34,.48],[.66,.48],[.08,.35],[.92,.35]],
-  stagger:[[.50,.78],[.12,.86],[.88,.86],[.34,.43],[.66,.43]],
-  zipperentry:[[.50,.78],[.16,.62],[.84,.62],[.34,.43],[.66,.43]],
-  triangle:[[.50,.82],[.82,.52],[.82,.78],[.18,.52],[.42,.30]],
-  amoeba:[[.50,.80],[.22,.60],[.78,.60],[.50,.43],[.50,.20]],
-  baselineTriangle:[[.50,.78],[.34,.43],[.66,.43],[.18,.68],[.82,.68]],
-  boxcross:[[.50,.78],[.34,.43],[.66,.43],[.25,.70],[.75,.70]],
-  stackslip:[[.50,.78],[.43,.67],[.43,.57],[.57,.67],[.57,.57]],
-  hornslate:[[.50,.86],[.34,.48],[.66,.48],[.08,.35],[.92,.35]],
-  cornerclear:[[.50,.78],[.16,.62],[.84,.62],[.34,.43],[.66,.43]],
-  man:[[.50,.78],[.16,.62],[.84,.62],[.34,.43],[.66,.43]],
-  zone23:[[.50,.78],[.30,.64],[.70,.64],[.16,.46],[.84,.46]],
-  zone32:[[.50,.78],[.16,.62],[.50,.62],[.84,.62],[.34,.43]],
-  zone131:[[.50,.78],[.16,.62],[.84,.62],[.35,.46],[.65,.46]],
-  fullman:[[.50,.78],[.16,.62],[.84,.62],[.34,.43],[.66,.43]],
-  boxone:[[.50,.78],[.30,.68],[.70,.68],[.30,.46],[.70,.46]]
+  // Standard 5-out spacing: point at top, two wings, two deep corners.
+  motion:[[.50,.58],[.82,.68],[.18,.68],[.06,.86],[.94,.86]],
+  // Requested Horns variation: 2/3 at elbows, 4/5 in the corners.
+  horns:[[.50,.58],[.34,.38],[.66,.38],[.08,.86],[.92,.86]],
+  pnr:[[.50,.58],[.62,.38],[.16,.68],[.84,.68],[.92,.86]],
+  givego:[[.50,.58],[.16,.68],[.84,.68],[.08,.86],[.92,.86]],
+  ucla:[[.50,.58],[.16,.68],[.84,.68],[.34,.38],[.66,.38]],
+  floppy:[[.50,.58],[.08,.86],[.92,.86],[.34,.38],[.66,.38]],
+  box:[[.50,.58],[.34,.38],[.66,.38],[.18,.68],[.82,.68]],
+  flex:[[.50,.58],[.16,.68],[.84,.68],[.34,.38],[.66,.38]],
+  baselinebox:[[.50,.58],[.34,.38],[.66,.38],[.18,.68],[.82,.68]],
+  stack:[[.50,.58],[.43,.36],[.43,.27],[.57,.36],[.57,.27]],
+  sidelinebox:[[.50,.58],[.16,.68],[.84,.68],[.34,.38],[.66,.38]],
+  zipper:[[.50,.58],[.16,.68],[.84,.68],[.34,.38],[.66,.38]],
+  press14:[[.50,.58],[.16,.68],[.84,.68],[.34,.38],[.66,.38]],
+  press212:[[.50,.58],[.16,.68],[.84,.68],[.34,.38],[.66,.38]],
+  diamond:[[.50,.58],[.30,.68],[.70,.68],[.42,.38],[.58,.38]],
+  twoforone:[[.50,.58],[.16,.68],[.84,.68],[.34,.38],[.66,.38]],
+  ato:[[.50,.58],[.16,.68],[.84,.68],[.34,.38],[.66,.38]],
+  need3:[[.50,.58],[.16,.68],[.84,.68],[.34,.38],[.66,.38]],
+  protect:[[.50,.58],[.16,.68],[.84,.68],[.34,.38],[.66,.38]],
+  princeton:[[.50,.58],[.16,.68],[.84,.68],[.34,.38],[.66,.38]],
+  spain:[[.50,.58],[.62,.38],[.16,.68],[.84,.68],[.92,.86]],
+  hornstwist:[[.50,.58],[.34,.38],[.66,.38],[.08,.86],[.92,.86]],
+  stagger:[[.50,.58],[.08,.86],[.92,.86],[.34,.38],[.66,.38]],
+  zipperentry:[[.50,.58],[.16,.68],[.84,.68],[.34,.38],[.66,.38]],
+  triangle:[[.50,.58],[.82,.68],[.82,.86],[.18,.68],[.42,.30]],
+  amoeba:[[.50,.58],[.22,.68],[.78,.68],[.50,.38],[.50,.20]],
+  baselineTriangle:[[.50,.58],[.34,.38],[.66,.38],[.18,.68],[.82,.68]],
+  boxcross:[[.50,.58],[.34,.38],[.66,.38],[.18,.68],[.82,.68]],
+  stackslip:[[.50,.58],[.43,.36],[.43,.27],[.57,.36],[.57,.27]],
+  hornslate:[[.50,.58],[.34,.38],[.66,.38],[.08,.86],[.92,.86]],
+  cornerclear:[[.50,.58],[.16,.68],[.84,.68],[.34,.38],[.66,.38]],
+  man:[[.50,.58],[.16,.68],[.84,.68],[.34,.38],[.66,.38]],
+  zone23:[[.50,.58],[.30,.68],[.70,.68],[.16,.38],[.84,.38]],
+  zone32:[[.50,.58],[.16,.68],[.50,.68],[.84,.68],[.34,.38]],
+  zone131:[[.50,.58],[.16,.48],[.50,.48],[.84,.48],[.50,.20]],
+  fullman:[[.50,.58],[.24,.68],[.76,.68],[.36,.48],[.64,.48]],
+  boxone:[[.50,.58],[.28,.48],[.72,.48],[.28,.30],[.72,.30]]
  };
  const forms=F[code]||F.motion,out=[];forms.forEach((p,i)=>out.push(M(i+1,p)));
  const defensive=['man','zone23','zone32','zone131','fullman','boxone','amoeba'].includes(code);
- const D=code==='amoeba'?[[.50,.76],[.25,.62],[.75,.62],[.50,.43],[.50,.22]]
-  :code==='zone23'?[[.30,.76],[.70,.76],[.16,.48],[.84,.48],[.50,.40]]
-  :code==='zone32'?[[.16,.76],[.50,.76],[.84,.76],[.34,.43],[.66,.43]]
-  :code==='zone131'?[[.50,.80],[.18,.57],[.50,.57],[.82,.57],[.50,.24]]
-  :code==='boxone'?[[.50,.82],[.28,.58],[.72,.58],[.28,.30],[.72,.30]]
-  :code==='fullman'?[[.50,.86],[.24,.72],[.76,.72],[.36,.57],[.64,.57]]
-  :[[.50,.78],[.18,.62],[.82,.62],[.25,.34],[.75,.34]];
+ const D=code==='amoeba'?[[.50,.58],[.25,.68],[.75,.68],[.50,.38],[.50,.20]]
+  :code==='zone23'?[[.30,.58],[.70,.58],[.16,.34],[.50,.34],[.84,.34]]
+  :code==='zone32'?[[.16,.58],[.50,.58],[.84,.58],[.34,.34],[.66,.34]]
+  :code==='zone131'?[[.50,.58],[.18,.44],[.50,.44],[.82,.44],[.50,.20]]
+  :code==='boxone'?[[.50,.58],[.28,.42],[.72,.42],[.28,.24],[.72,.24]]
+  :code==='fullman'?[[.50,.58],[.24,.68],[.76,.68],[.36,.48],[.64,.48]]
+  :[[.50,.58],[.18,.68],[.82,.68],[.25,.38],[.75,.38]];
  if(defensive)D.forEach((p,i)=>out.push(M(i+1,p,'defense')));
  // Each action is a coordinated sequence, not five unrelated straight lines.
  const actions={
-  motion:{paths:{1:[[.50,.88],[.50,.78],[.70,.62],[.82,.62],[.82,.48]],2:[[.82,.62],[.70,.52],[.50,.42],[.34,.42]],3:[[.18,.62],[.30,.52],[.34,.42],[.18,.62]],4:[[.06,.35],[.06,.48],[.18,.62],[.06,.48]],5:[[.94,.35],[.94,.48],[.82,.62],[.94,.48]]},passes:[[1,2,.20,.29],[2,3,.52,.61],[3,5,.73,.82]]},
-  horns:{paths:{1:[[.50,.86],[.50,.76],[.34,.62],[.18,.62],[.12,.42]],2:[[.34,.48],[.42,.38],[.50,.27],[.50,.15]],3:[[.66,.48],[.58,.38],[.50,.27],[.50,.15]],4:[[.08,.62],[.08,.52],[.34,.48]],5:[[.92,.62],[.92,.52],[.66,.48]]},passes:[[1,2,.18,.27],[2,1,.48,.57],[1,3,.70,.79]]},
+  motion:{paths:{1:[[.50,.58],[.50,.42],[.50,.22],[.12,.86]],2:[[.82,.68],[.72,.68],[.50,.58]],3:[[.18,.68],[.34,.62],[.50,.58]],4:[[.06,.86],[.18,.68]],5:[[.94,.86],[.82,.68]]},passes:[[1,2,.20,.29],[2,3,.52,.61],[3,5,.73,.82]]},
+  horns:{paths:{1:[[.50,.58],[.56,.48],[.62,.34],[.50,.18]],2:[[.34,.38],[.42,.38],[.50,.30],[.50,.18]],3:[[.66,.38],[.58,.38],[.50,.30]],4:[[.08,.86],[.18,.68],[.34,.38]],5:[[.92,.86],[.82,.68],[.66,.38]]},passes:[[1,2,.18,.27],[2,1,.48,.57],[1,3,.70,.79]]},
   pnr:{paths:{1:[[.50,.86],[.50,.76],[.58,.65],[.62,.54],[.50,.30]],2:[[.50,.62],[.56,.62],[.52,.55],[.48,.42],[.44,.30]],3:[[.12,.60],[.12,.48]],4:[[.88,.60],[.88,.48]],5:[[.50,.35],[.78,.42],[.88,.60]]},passes:[[1,2,.57,.68]]},
   givego:{paths:{1:[[.50,.78],[.50,.68],[.16,.62],[.16,.50],[.50,.28]],2:[[.16,.62],[.16,.53],[.50,.28]],3:[[.84,.62],[.84,.50]],4:[[.10,.86],[.10,.74]],5:[[.90,.86],[.90,.74]]},passes:[[1,2,.22,.32],[2,1,.62,.72]]},
   ucla:{paths:{1:[[.50,.78],[.50,.68],[.16,.62],[.50,.43],[.50,.25]],2:[[.16,.62],[.30,.54],[.50,.43]],3:[[.84,.62],[.84,.49]],4:[[.34,.43],[.50,.34],[.50,.18]],5:[[.66,.43],[.66,.54]]},passes:[[1,2,.18,.27],[2,1,.54,.64]]},
