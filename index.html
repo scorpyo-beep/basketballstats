@@ -448,8 +448,24 @@ function drawPlay(options={}){
    x.beginPath();x.arc(px,py,12,0,Math.PI*2);x.fillStyle='#f97316';x.fill();x.lineWidth=2;x.strokeStyle='#7c2d12';x.stroke();
    x.beginPath();x.moveTo(px-8,py);x.lineTo(px+8,py);x.moveTo(px,py-8);x.lineTo(px,py+8);x.stroke();return;
   }
-  x.strokeStyle=st.color||'#dc2626';x.fillStyle=st.color||'#dc2626';x.lineWidth=st.tool==='erase'?18:6;x.lineCap='round';x.lineJoin='round';x.beginPath();x.moveTo(st.points[0].x*c.width,st.points[0].y*c.height);st.points.slice(1).forEach(pt=>x.lineTo(pt.x*c.width,pt.y*c.height));x.stroke();
-  if((st.tool==='arrow'||st.tool==='pass'||st.tool==='screen')&&st.points.length>1){const a=st.points[st.points.length-2],b=st.points[st.points.length-1],ax=a.x*c.width,ay=a.y*c.height,bx=b.x*c.width,by=b.y*c.height,ang=Math.atan2(by-ay,bx-ax),len=25;x.beginPath();x.moveTo(bx,by);x.lineTo(bx-len*Math.cos(ang-.5),by-len*Math.sin(ang-.5));x.lineTo(bx-len*Math.cos(ang+.5),by-len*Math.sin(ang+.5));x.closePath();x.fill()}
+  x.strokeStyle=st.color||'#dc2626';x.fillStyle=st.color||'#dc2626';x.lineWidth=st.tool==='erase'?18:6;x.lineCap='round';x.lineJoin='round';
+  const pts=st.points.map(pt=>({x:pt.x*c.width,y:pt.y*c.height}));
+  // Arrow and pass tools are deliberately straight: only the start and end matter.
+  // Freehand notes and player routes use quadratic midpoint smoothing to remove finger jitter.
+  x.beginPath();x.moveTo(pts[0].x,pts[0].y);
+  if((st.tool==='arrow'&&!st.player)||st.tool==='pass'||st.tool==='screen'){
+   const end=pts[pts.length-1];x.lineTo(end.x,end.y);
+  }else if(pts.length===2){x.lineTo(pts[1].x,pts[1].y)}
+  else if(pts.length>2){
+   for(let i=1;i<pts.length-1;i++){const mid={x:(pts[i].x+pts[i+1].x)/2,y:(pts[i].y+pts[i+1].y)/2};x.quadraticCurveTo(pts[i].x,pts[i].y,mid.x,mid.y)}
+   const last=pts[pts.length-1];x.lineTo(last.x,last.y);
+  }
+  x.stroke();
+  if((st.tool==='arrow'||st.tool==='pass'||st.tool==='screen'||st.tool==='playerRoute')&&pts.length>1){
+   const b=pts[pts.length-1];let a=pts[pts.length-2];
+   if((st.tool==='arrow'&&!st.player)||st.tool==='pass'||st.tool==='screen')a=pts[0];
+   const ang=Math.atan2(b.y-a.y,b.x-a.x),len=25;x.beginPath();x.moveTo(b.x,b.y);x.lineTo(b.x-len*Math.cos(ang-.5),b.y-len*Math.sin(ang-.5));x.lineTo(b.x-len*Math.cos(ang+.5),b.y-len*Math.sin(ang+.5));x.closePath();x.fill();
+  }
  });
 }
 function setPlayTool(t){if(presetReadOnly)return toast('Preset plays are view-only. Choose New Custom Board to draw.');playTool=t;toast(({draw:'Draw a freehand coaching note',arrow:'Draw a direction arrow',playerRoute:'Draw a route for the selected player and team',pass:'Drag from passer toward receiver; set pass from/to first',ball:'Tap the court to set the ball marker',move:'Drag numbered players to reposition them',erase:'Erase',offense:'Tap court to place offensive player',defense:'Tap court to place defender'})[t]||'Tool selected')}
@@ -460,7 +476,7 @@ function setupPlayCanvas(){
  const redraw=()=>{if(rafPending)return;rafPending=true;requestAnimationFrame(()=>{rafPending=false;drawPlay()})};
  const hit=pos=>{const rect=c.getBoundingClientRect(),radius=32/Math.min(rect.width/c.width,rect.height/c.height);for(let i=playStrokes.length-1;i>=0;i--){const st=playStrokes[i];if(!/^(offense|defense)[1-5]$/.test(st.tool)||!st.points?.length)continue;const q=st.points[0];if(Math.hypot((q.x-pos.x)*c.width,(q.y-pos.y)*c.height)<=radius)return i}return -1};
  c.addEventListener('pointerdown',e=>{if(presetReadOnly){toast('Tap Edit Preset before changing this play.');return}e.preventDefault();c.setPointerCapture(e.pointerId);const pos=playPos(e),idx=hit(pos);if(idx>=0&&(playTool==='move'||playTool==='draw'||playTool==='arrow')){dragIndex=idx;playPointer=e.pointerId;return}if(playTool==='offense'||playTool==='defense'){const n=document.getElementById('playMarkerNumber').value;playStrokes=playStrokes.filter(st=>st.tool!==playTool+n);playStrokes.push({tool:playTool+n,color:playTool==='offense'?'#07558a':'#dc2626',points:[pos]});drawPlay();return}if(playTool==='ball'){playStrokes=playStrokes.filter(st=>st.tool!=='ball');playStrokes.push({tool:'ball',player:Number(document.getElementById('playMarkerNumber').value),points:[pos]});drawPlay();return}playPointer=e.pointerId;isDrawing=true;const routeTeam=document.getElementById('playRouteTeam')?.value||'offense',routePlayer=Number(document.getElementById('playMarkerNumber').value);const stroke={tool:playTool==='playerRoute'?'arrow':playTool,color:playTool==='erase'?'#d49a59':(playTool==='pass'?'#16a34a':document.getElementById('playColor').value),points:[pos]};if(playTool==='playerRoute'){stroke.player=routePlayer;stroke.team=routeTeam;}if(playTool==='pass'){stroke.player=Number(document.getElementById('playPassFrom').value);stroke.receiver=Number(document.getElementById('playPassTo').value);stroke.t0=.25+playStrokes.filter(q=>q.tool==='pass').length*.18;stroke.t1=stroke.t0+.12;}playStrokes.push(stroke);drawPlay()});
- c.addEventListener('pointermove',e=>{if(playPointer!==e.pointerId)return;const pos=playPos(e);if(dragIndex!==null){const marker=playStrokes[dragIndex],old=marker.points[0],dx=pos.x-old.x,dy=pos.y-old.y;marker.points[0]=pos;const m=/^(offense|defense)([1-5])$/.exec(marker.tool);if(m){const team=m[1],player=Number(m[2]);playStrokes.forEach(st=>{if(st!==marker&&st.tool==='arrow'&&st.player===player&&(st.team||'offense')===team&&st.points?.length){st.points[0]={x:Math.max(0,Math.min(1,st.points[0].x+dx)),y:Math.max(0,Math.min(1,st.points[0].y+dy))}}});}redraw();return}if(isDrawing){playStrokes[playStrokes.length-1].points.push(pos);redraw()}});
+ c.addEventListener('pointermove',e=>{if(playPointer!==e.pointerId)return;const pos=playPos(e);if(dragIndex!==null){const marker=playStrokes[dragIndex],old=marker.points[0],dx=pos.x-old.x,dy=pos.y-old.y;marker.points[0]=pos;const m=/^(offense|defense)([1-5])$/.exec(marker.tool);if(m){const team=m[1],player=Number(m[2]);playStrokes.forEach(st=>{if(st!==marker&&st.tool==='arrow'&&st.player===player&&(st.team||'offense')===team&&st.points?.length){st.points[0]={x:Math.max(0,Math.min(1,st.points[0].x+dx)),y:Math.max(0,Math.min(1,st.points[0].y+dy))}}});}redraw();return}if(isDrawing){const pts=playStrokes[playStrokes.length-1].points,last=pts[pts.length-1];const dx=(pos.x-last.x)*c.width,dy=(pos.y-last.y)*c.height;if(dx*dx+dy*dy>=16){pts.push(pos);redraw()}}});
  const end=e=>{if(playPointer===e.pointerId){playPointer=null;dragIndex=null;isDrawing=false;drawPlay()}};c.addEventListener('pointerup',end);c.addEventListener('pointercancel',end);drawPlay();
 }
 function undoPlayStroke(){if(presetReadOnly)return toast('Preset is view-only.');playStrokes.pop();drawPlay()}
