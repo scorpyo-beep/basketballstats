@@ -1,0 +1,24 @@
+{
+  "name": "Dimeond minds",
+  "short_name": "Dimeond minds",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#eef4f8",
+  "theme_color": "#07558a",
+  "icons": [
+    {
+      "src": "./icon-512.png?v=dimeond-minds-20261124",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./icon.svg?v=dimeond-minds-20261124",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
